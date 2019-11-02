@@ -77,6 +77,17 @@ sam6883_device::sam6883_device(const machine_config &mconfig, const char *tag, d
 	, m_cpu_space(nullptr)
 	, m_read_res(*this)
 	, m_banks{ { *this }, { *this }, { *this }, { *this }, { *this }, { *this }, { *this }, { *this } }
+	, m_space_banks(*this, {
+			"bank0000_r", "bank0000_w",
+			"bank8000_r", "bank8000_w",
+			"bankA000_r", "bankA000_w",
+			"bankC000_r", "bankC000_w",
+			"bankFF00_r", "bankFF00_w",
+			"bankFF20_r", "bankFF20_w",
+			"bankFF40_r", "bankFF40_w",
+			"bankFF60_r", "bankFF60_w",
+			"bankFFE0_r", "bankFFE0_w",
+			"bankFFF2_r", "bankFFF2_w"})
 	, m_space_0000(*this)
 	, m_space_8000(*this)
 	, m_space_A000(*this)
@@ -449,8 +460,8 @@ WRITE_LINE_MEMBER( sam6883_device::hs_w )
 //  sam_space::constructor
 //-------------------------------------------------
 
-template<uint16_t _addrstart, uint16_t _addrend>
-sam6883_device::sam_space<_addrstart, _addrend>::sam_space(sam6883_device &owner)
+template<int _id, uint16_t _addrstart, uint16_t _addrend>
+sam6883_device::sam_space<_id, _addrstart, _addrend>::sam_space(sam6883_device &owner)
 	: m_owner(owner)
 {
 	m_read_bank = nullptr;
@@ -464,8 +475,8 @@ sam6883_device::sam_space<_addrstart, _addrend>::sam_space(sam6883_device &owner
 //  sam_space::cpu_space
 //-------------------------------------------------
 
-template<uint16_t _addrstart, uint16_t _addrend>
-address_space &sam6883_device::sam_space<_addrstart, _addrend>::cpu_space() const
+template<int _id, uint16_t _addrstart, uint16_t _addrend>
+address_space &sam6883_device::sam_space<_id, _addrstart, _addrend>::cpu_space() const
 {
 	assert(m_owner.m_cpu_space != nullptr);
 	return *m_owner.m_cpu_space;
@@ -477,8 +488,8 @@ address_space &sam6883_device::sam_space<_addrstart, _addrend>::cpu_space() cons
 //  sam_space::point
 //-------------------------------------------------
 
-template<uint16_t _addrstart, uint16_t _addrend>
-void sam6883_device::sam_space<_addrstart, _addrend>::point(const sam_bank &bank, uint16_t offset, uint32_t length)
+template<int _id, uint16_t _addrstart, uint16_t _addrend>
+void sam6883_device::sam_space<_id, _addrstart, _addrend>::point(const sam_bank &bank, uint16_t offset, uint32_t length)
 {
 	if (LOG_SAM)
 	{
@@ -500,8 +511,8 @@ void sam6883_device::sam_space<_addrstart, _addrend>::point(const sam_bank &bank
 //-------------------------------------------------
 //  sam_space::point_specific_bank
 //-------------------------------------------------
-template<uint16_t _addrstart, uint16_t _addrend>
-void sam6883_device::sam_space<_addrstart, _addrend>::point_specific_bank(const sam_bank &bank, uint32_t offset, uint32_t length, memory_bank *&memory_bank, uint32_t addrstart, uint32_t addrend, bool is_write)
+template<int _id, uint16_t _addrstart, uint16_t _addrend>
+void sam6883_device::sam_space<_id, _addrstart, _addrend>::point_specific_bank(const sam_bank &bank, uint32_t offset, uint32_t length, memory_bank *&memory_bank, uint32_t addrstart, uint32_t addrend, bool is_write)
 {
 	if (bank.m_memory != nullptr)
 	{
@@ -510,43 +521,35 @@ void sam6883_device::sam_space<_addrstart, _addrend>::point_specific_bank(const 
 		if (length != ~0)
 			length -= std::min(offset, length);
 
-		// name the bank
-		auto tag = string_format("bank%04X_%c", addrstart, is_write ? 'w' : 'r');
-
 		// determine "nop_addrstart" - where the bank ends, and above which is .noprw();
 		uint32_t nop_addrstart = (length != ~0)
 			? std::min(addrend + 1, addrstart + length)
 			: addrend + 1;
 
+		memory_bank = m_owner.m_space_banks[2*_id + (is_write ? 1 : 0)];
 		// install the bank
 		if (is_write)
 		{
 			if (addrstart < nop_addrstart)
-				cpu_space().install_write_bank(addrstart, nop_addrstart - 1, 0, tag.c_str());
+				cpu_space().install_write_bank(addrstart, nop_addrstart - 1, 0, memory_bank);
 			if (nop_addrstart <= addrend)
 				cpu_space().nop_write(nop_addrstart, addrend);
 		}
 		else
 		{
 			if (addrstart < nop_addrstart)
-				cpu_space().install_read_bank(addrstart, nop_addrstart - 1, 0, tag.c_str());
+				cpu_space().install_read_bank(addrstart, nop_addrstart - 1, 0, memory_bank);
 			if (nop_addrstart <= addrend)
 				cpu_space().nop_read(nop_addrstart, addrend);
 		}
 
 		m_length = length;
 
-		// and get it
-		memory_bank = cpu_space().device().owner()->membank(tag.c_str());
-
 		// point the bank
-		if (memory_bank != nullptr)
-		{
-			if (is_write && bank.m_memory_read_only)
-				memory_bank->set_base(m_owner.m_dummy);
-			else
-				memory_bank->set_base(bank.m_memory + offset);
-		}
+		if (is_write && bank.m_memory_read_only)
+			memory_bank->set_base(m_owner.m_dummy);
+		else
+			memory_bank->set_base(bank.m_memory + offset);
 	}
 	else
 	{

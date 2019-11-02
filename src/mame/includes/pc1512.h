@@ -202,7 +202,7 @@ public:
 	pc1512_state(const machine_config &mconfig, device_type type, const char *tag)
 		: pc1512_base_state(mconfig, type, tag)
 		, m_vdu(*this, AMS40041_TAG)
-		, m_video_ram(*this, "video_ram")
+		, m_video_ram(*this, "video_ram", 0x10000, ENDIANNESS_LITTLE)
 		, m_char_rom(*this, AMS40041_TAG)
 		, m_screen(*this, SCREEN_TAG) { }
 
@@ -234,7 +234,7 @@ public:
 	void pc1512_mem(address_map &map);
 
 	required_device<ams40041_device> m_vdu;
-	optional_shared_ptr<uint8_t> m_video_ram;
+	memory_share_creator<uint8_t> m_video_ram;
 	required_memory_region m_char_rom;
 	required_device<screen_device> m_screen;
 

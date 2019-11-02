@@ -64,32 +64,31 @@ Todo:
 class vtech1_state : public driver_device
 {
 public:
-	vtech1_state(const machine_config &mconfig, device_type type, const char *tag) :
+	vtech1_state(const machine_config &mconfig, device_type type, const char *tag, uint32_t vsize) :
 		driver_device(mconfig, type, tag),
-		m_videoram(*this, "videoram"),
+		m_videoram(*this, "videoram", vsize, ENDIANNESS_LITTLE),
 		m_maincpu(*this, "maincpu"),
 		m_mc6847(*this, "mc6847"),
 		m_speaker(*this, "speaker"),
 		m_cassette(*this, "cassette"),
 		m_ioexp(*this, "io"),
-		m_memexp(*this, "mem")
+		m_memexp(*this, "mem")	{
+	}
+
+	vtech1_state(const machine_config &mconfig, device_type type, const char *tag) :
+		vtech1_state(mconfig, type, tag, 0x800)
 	{
 	}
 
 	void laser310(machine_config &config);
 	void laser200(machine_config &config);
-	void laser310h(machine_config &config);
 	void laser110(machine_config &config);
 	void laser210(machine_config &config);
 
-	void init_vtech1h();
-
-private:
 	DECLARE_READ8_MEMBER(vtech1_lightpen_r);
 	DECLARE_READ8_MEMBER(vtech1_keyboard_r);
-	DECLARE_WRITE8_MEMBER(vtech1_latch_w);
+	void vtech1_latch_w(uint8_t data);
 
-	DECLARE_WRITE8_MEMBER(vtech1_video_bank_w);
 	DECLARE_READ8_MEMBER(mc6847_videoram_r);
 
 	DECLARE_SNAPSHOT_LOAD_MEMBER(snapshot_cb);
@@ -103,7 +102,7 @@ private:
 	static const uint8_t VZ_BASIC = 0xf0;
 	static const uint8_t VZ_MCODE = 0xf1;
 
-	required_shared_ptr<uint8_t> m_videoram;
+	memory_share_creator<uint8_t> m_videoram;
 
 	required_device<cpu_device> m_maincpu;
 	required_device<mc6847_base_device> m_mc6847;
@@ -113,6 +112,24 @@ private:
 	required_device<vtech_memexp_slot_device> m_memexp;
 };
 
+class vtech1h_state : public vtech1_state
+{
+public:
+	vtech1h_state(const machine_config &mconfig, device_type type, const char *tag) :
+		vtech1_state(mconfig, type, tag, 0x2000),
+		m_1h_vbank(*this, "1h_vbank")
+	{
+	}
+
+	void init_vtech1h();
+	void laser310h(machine_config &config);
+	void laser310h_mem(address_map &map);
+	void vtech1h_latch_w(uint8_t data);
+
+	memory_bank_creator m_1h_vbank;
+	DECLARE_WRITE8_MEMBER(vtech1h_video_bank_w);
+};
+	
 
 /***************************************************************************
     SNAPSHOT LOADING
@@ -225,17 +242,10 @@ READ8_MEMBER( vtech1_state::vtech1_keyboard_r )
     I/O LATCH
 ***************************************************************************/
 
-WRITE8_MEMBER( vtech1_state::vtech1_latch_w )
+void vtech1_state::vtech1_latch_w(uint8_t data)
 {
 	if (LOG_VTECH1_LATCH)
 		logerror("vtech1_latch_w $%02X\n", data);
-
-	// bit 1, SHRG mod (if installed)
-	if (m_videoram.bytes() == 0x2000)
-	{
-		m_mc6847->gm0_w(BIT(data, 1));
-		m_mc6847->gm2_w(BIT(data, 1));
-	}
 
 	// bit 2, cassette out (actually bits 1 and 2 perform this function, so either can be used)
 	m_cassette->output( BIT(data, 2) ? 1.0 : -1.0);
@@ -248,14 +258,23 @@ WRITE8_MEMBER( vtech1_state::vtech1_latch_w )
 	m_speaker->level_w((BIT(data, 5) << 1) | BIT(data, 0));
 }
 
+void vtech1h_state::vtech1h_latch_w(uint8_t data)
+{
+	vtech1_latch_w(data);
+
+	// bit 1, SHRG mod
+	m_mc6847->gm0_w(BIT(data, 1));
+	m_mc6847->gm2_w(BIT(data, 1));
+}
+
 
 /***************************************************************************
     MEMORY BANKING
 ***************************************************************************/
 
-WRITE8_MEMBER( vtech1_state::vtech1_video_bank_w )
+WRITE8_MEMBER( vtech1h_state::vtech1h_video_bank_w )
 {
-	membank("bank4")->set_entry(data & 0x03);
+	m_1h_vbank->set_entry(data & 0x03);
 }
 
 
@@ -278,14 +297,10 @@ READ8_MEMBER( vtech1_state::mc6847_videoram_r )
     DRIVER INIT
 ***************************************************************************/
 
-void vtech1_state::init_vtech1h()
+void vtech1h_state::init_vtech1h()
 {
-	// the SHRG mod replaces the standard videoram chip with an 8k chip
-	m_videoram.allocate(0x2000);
-
-	m_maincpu->space(AS_PROGRAM).install_readwrite_bank(0x7000, 0x77ff, "bank4");
-	membank("bank4")->configure_entries(0, 4, m_videoram, 0x800);
-	membank("bank4")->set_entry(0);
+	m_1h_vbank->configure_entries(0, 4, m_videoram, 0x800);
+	m_1h_vbank->set_entry(0);
 }
 
 
@@ -317,6 +332,14 @@ void vtech1_state::laser310_mem(address_map &map)
 	map(0x7800, 0xb7ff).ram(); // 16k user ram
 }
 
+void vtech1h_state::laser310h_mem(address_map &map)
+{
+	map(0x0000, 0x3fff).rom(); // basic rom
+	map(0x6800, 0x6fff).rw(FUNC(vtech1_state::vtech1_keyboard_r), FUNC(vtech1h_state::vtech1h_latch_w));
+	map(0x7000, 0x77ff).bankrw("1h_vbank");
+	map(0x7800, 0xb7ff).ram(); // 16k user ram
+}
+
 void vtech1_state::vtech1_io(address_map &map)
 {
 	map.global_mask(0xff);
@@ -326,7 +349,7 @@ void vtech1_state::vtech1_io(address_map &map)
 void vtech1_state::vtech1_shrg_io(address_map &map)
 {
 	vtech1_io(map);
-	map(0xd0, 0xdf).w(FUNC(vtech1_state::vtech1_video_bank_w));
+	map(0xd0, 0xdf).w(FUNC(vtech1h_state::vtech1h_video_bank_w));
 }
 
 
@@ -498,9 +521,10 @@ void vtech1_state::laser310(machine_config &config)
 	m_maincpu->set_addrmap(AS_IO, &vtech1_state::vtech1_io);
 }
 
-void vtech1_state::laser310h(machine_config &config)
+void vtech1h_state::laser310h(machine_config &config)
 {
 	laser310(config);
+	m_maincpu->set_addrmap(AS_PROGRAM, &vtech1h_state::laser310h_mem);
 	m_maincpu->set_addrmap(AS_IO, &vtech1_state::vtech1_shrg_io);
 
 	MC6847_PAL(config.replace(), m_mc6847, XTAL(4'433'619));
@@ -578,4 +602,4 @@ COMP( 1984, laser210,  0,        0,      laser210,  vtech1, vtech1_state, empty_
 COMP( 1984, vz200,     laser210, 0,      laser210,  vtech1, vtech1_state, empty_init,   "Dick Smith Electronics", "VZ-200 (Oceania)",               0 )
 COMP( 1984, laser310,  0,        0,      laser310,  vtech1, vtech1_state, empty_init,   "Video Technology",       "Laser 310",                      0 )
 COMP( 1984, vz300,     laser310, 0,      laser310,  vtech1, vtech1_state, empty_init,   "Dick Smith Electronics", "VZ-300 (Oceania)",               0 )
-COMP( 1984, laser310h, laser310, 0,      laser310h, vtech1, vtech1_state, init_vtech1h, "Video Technology",       "Laser 310 (SHRG)",               MACHINE_UNOFFICIAL )
+COMP( 1984, laser310h, laser310, 0,      laser310h, vtech1, vtech1h_state, init_vtech1h, "Video Technology",       "Laser 310 (SHRG)",               MACHINE_UNOFFICIAL )

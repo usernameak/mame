@@ -55,7 +55,7 @@ void el2_3c503_device::device_reset() {
 	m_regs.ctrl = 0x0a;
 	m_irq_state = CLEAR_LINE;
 	m_isa->unmap_bank(SADDR, SADDR + 0x1fff);
-	m_isa->install_bank(SADDR, SADDR + 0x1fff, "3c503 rom", m_rom);
+	m_isa->install_bank(SADDR, SADDR + 0x1fff, m_rom);
 }
 
 void el2_3c503_device::set_irq(int state) {
@@ -193,13 +193,13 @@ WRITE8_MEMBER(el2_3c503_device::el2_3c503_hiport_w) {
 			m_isa->unmap_bank(SADDR, SADDR + 0x1fff);
 			switch(data & 0xf) {
 			case 0:
-				m_isa->install_bank(SADDR, SADDR + 0x1fff, "3c503 rom", m_rom);
+				m_isa->install_bank(SADDR, SADDR + 0x1fff, m_rom);
 				break;
 			case 9:
-				m_isa->install_bank(SADDR, SADDR + 0x1fff, "3c503 ram", m_board_ram);
+				m_isa->install_bank(SADDR, SADDR + 0x1fff, m_board_ram);
 				break;
 			default:
-				m_isa->install_bank(SADDR, SADDR + 0x1fff, "3c503 no map", m_rom);
+				m_isa->install_bank(SADDR, SADDR + 0x1fff, m_rom);
 				break;
 			}
 		}

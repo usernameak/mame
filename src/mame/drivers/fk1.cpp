@@ -260,7 +260,7 @@ READ8_MEMBER( fk1_state::fk1_bank_ram_r )
 	address_space &space_mem = m_maincpu->space(AS_PROGRAM);
 	uint8_t *ram = m_ram->pointer();
 
-	space_mem.install_write_bank(0x0000, 0x3fff, "bank1");
+	space_mem.install_write_bank(0x0000, 0x3fff, membank("bank1"));
 	membank("bank1")->set_base(ram);
 	membank("bank2")->set_base(ram + 0x4000);
 	return 0;

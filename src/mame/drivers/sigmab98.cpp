@@ -1,4 +1,4 @@
-// license:BSD-3-Clause
+// license:BSD-3-Clause // license:BSD-3-Clause;
 // copyright-holders:Luca Elia
 /*************************************************************************************************************
 
@@ -132,7 +132,7 @@ Notes:
 class sigmab98_state : public driver_device
 {
 public:
-	sigmab98_state(const machine_config &mconfig, device_type type, const char *tag) :
+	sigmab98_state(const machine_config &mconfig, device_type type, const char *tag, u32 nvram_size = 0x1000, u32 spriteram_size = 0x1000) :
 		driver_device(mconfig, type, tag),
 		// Required devices
 		m_maincpu(*this,"maincpu"),
@@ -147,10 +147,10 @@ public:
 		m_hopper_small(*this, "hopper_small"),
 		m_hopper_large(*this, "hopper_large"),
 		// Shared pointers
-		m_nvram(*this, "nvram"),
-		m_spriteram(*this, "spriteram"),
+		m_nvram(*this, "nvram", nvram_size, ENDIANNESS_LITTLE),
 		m_vregs(*this, "vregs"),
 		m_vtable(*this, "vtable"),
+		m_spriteram(*this, "spriteram", spriteram_size, ENDIANNESS_LITTLE),
 		m_leds(*this, "led%u", 0U)
 	{ }
 
@@ -300,10 +300,10 @@ protected:
 	optional_device<ticket_dispenser_device> m_hopper_small;
 	optional_device<ticket_dispenser_device> m_hopper_large;
 	// Shared pointers
-	required_shared_ptr<uint8_t> m_nvram;
-	optional_shared_ptr<uint8_t> m_spriteram; // optional as some games allocate it themselves (due to banking)
-	optional_shared_ptr<uint8_t> m_vregs;     // optional as some games allocate it themselves (due to banking)
-	optional_shared_ptr<uint8_t> m_vtable;    // optional as some games allocate it themselves (due to banking)
+	memory_share_creator<uint8_t> m_nvram;
+	required_shared_ptr<uint8_t> m_vregs;
+	required_shared_ptr<uint8_t> m_vtable;
+	memory_share_creator<uint8_t> m_spriteram;
 	output_finder<8> m_leds;
 
 	std::vector<uint8_t> m_paletteram;
@@ -328,12 +328,19 @@ protected:
 	uint8_t m_out[3];
 };
 
+class sigma5p_state : public sigmab98_state
+{
+public:
+	sigma5p_state(const machine_config &mconfig, device_type type, const char *tag) :
+		sigmab98_state(mconfig, type, tag, 0x1000, 0x5000)
+	{ }
+};
 
 class lufykzku_state : public sigmab98_state
 {
 public:
 	lufykzku_state(const machine_config &mconfig, device_type type, const char *tag) :
-		sigmab98_state(mconfig, type, tag),
+		sigmab98_state(mconfig, type, tag, 0x8000, 0x1000),
 		m_watchdog(*this, "watchdog_mb3773"),
 		m_dsw_shifter(*this, "ttl165_%u", 1U),
 		m_dsw_bit(0)
@@ -817,7 +824,7 @@ void sigmab98_state::dodghero_mem_map(address_map &map)
 
 	map(0xc800, 0xc9ff).ram().w(m_palette, FUNC(palette_device::write8)).share("palette");
 
-	map(0xd001, 0xd07f).ram().share("vtable");
+	map(0xd000, 0xd07f).ram().share("vtable");
 
 	map(0xd800, 0xdfff).bankrw("rambank");    // not used, where is it mapped?
 
@@ -3490,10 +3497,6 @@ ROM_END
 
 void lufykzku_state::init_lufykzku()
 {
-	m_nvram.allocate(0x4000);
-	memset(m_nvram, 0, 0x4000);
-	m_nvramdev->set_base(m_nvram, 0x4000);
-
 	// ROM/RAM banks
 	uint8_t *rom = memregion("maincpu")->base();
 
@@ -3598,7 +3601,6 @@ void sigmab98_state::init_animalc()
 	membank("rambank")->configure_entries(1, 4, bankedram, 0x1000);
 	membank("rambank")->set_entry(0);
 
-	m_spriteram.allocate(0x1000 * 5);
 	memset(m_spriteram, 0, 0x1000 * 5);
 	membank("sprbank")->configure_entries(0, 5, m_spriteram, 0x1000);
 	membank("sprbank")->set_entry(0);
@@ -3653,17 +3655,12 @@ void sigmab98_state::init_gocowboy()
 	memset(&m_paletteram[0], 0, 0x200);
 	m_palette->basemem().set(m_paletteram, ENDIANNESS_BIG, 2);
 
-	m_nvram.allocate(0x8000);
 	memset(m_nvram, 0, 0x8000);
 	m_nvramdev->set_base(m_nvram, 0x8000);
 
-	m_spriteram.allocate(0x1000);
 	memset(m_spriteram, 0, 0x1000);
 
-	m_vregs.allocate(0x22);
 	memset(m_vregs, 0, 0x22);
-
-	m_vtable.allocate(0x80);
 	memset(m_vtable, 0, 0x80);
 
 	m_rombank = 0x6b;
@@ -3711,7 +3708,6 @@ void sigmab98_state::init_itazuram()
 	membank("palbank")->set_base(&m_paletteram[0]);
 	m_rambank = 0x64;
 
-	m_spriteram.allocate(0x1000 * 5);
 	memset(m_spriteram, 0, 0x1000 * 5);
 	membank("sprbank0")->set_base(m_spriteram + 0x1000*4);  // scratch
 	membank("sprbank1")->set_base(m_spriteram + 0x1000*4);  // scratch
@@ -3822,13 +3818,9 @@ void sigmab98_state::init_haekaka()
 	memset(&m_paletteram[0], 0, 0x200);
 	m_palette->basemem().set(m_paletteram, ENDIANNESS_BIG, 2);
 
-	m_spriteram.allocate(0x1000);
 	memset(m_spriteram, 0, 0x1000);
 
-	m_vregs.allocate(0x22);
 	memset(m_vregs, 0, 0x22);
-
-	m_vtable.allocate(0x80);
 	memset(m_vtable, 0, 0x80);
 
 	m_rombank = 0x65;
@@ -3858,8 +3850,8 @@ GAME( 2000, dashhero, 0,        dashhero, sigma_1b, sigmab98_state, init_dashher
 GAME( 2001, lufykzku, 0,        lufykzku, lufykzku, lufykzku_state, init_lufykzku, ROT0, "Banpresto / Eiichiro Oda / Shueisha - Fuji TV - Toho Animation", "Otakara Itadaki Luffy Kaizoku-Dan! (Japan, v1.02)", 0 )
 // Sammy Medal Games:
 GAME( 2000, sammymdl, 0,        sammymdl, sammymdl, sigmab98_state, init_animalc,  ROT0, "Sammy",             "Sammy Medal Game System Bios",         MACHINE_IS_BIOS_ROOT )
-GAME( 2000, animalc,  sammymdl, animalc,  sammymdl, sigmab98_state, init_animalc,  ROT0, "Sammy",             "Animal Catch",                         0 )
-GAME( 2000, itazuram, sammymdl, itazuram, sammymdl, sigmab98_state, init_itazuram, ROT0, "Sammy",             "Itazura Monkey",                       0 )
+GAME( 2000, animalc,  sammymdl, animalc,  sammymdl, sigma5p_state,  init_animalc,  ROT0, "Sammy",             "Animal Catch",                         0 )
+GAME( 2000, itazuram, sammymdl, itazuram, sammymdl, sigma5p_state,  init_itazuram, ROT0, "Sammy",             "Itazura Monkey",                       0 )
 GAME( 2000, pyenaget, sammymdl, pyenaget, sammymdl, sigmab98_state, init_haekaka,  ROT0, "Sammy",             "Pye-nage Taikai",                      0 )
 GAME( 2000, tdoboon,  sammymdl, tdoboon,  haekaka,  sigmab98_state, init_haekaka,  ROT0, "Sammy",             "Taihou de Doboon",                     0 )
 GAME( 2001, haekaka,  sammymdl, haekaka,  haekaka,  sigmab98_state, init_haekaka,  ROT0, "Sammy",             "Hae Hae Ka Ka Ka",                     0 )

@@ -229,10 +229,6 @@ private:
 	DECLARE_WRITE8_MEMBER(fm77av_sub_bank_w);
 	DECLARE_READ8_MEMBER(fm77av_alu_r);
 	DECLARE_WRITE8_MEMBER(fm77av_alu_w);
-	DECLARE_READ8_MEMBER(fm7_sub_ram_ports_banked_r);
-	DECLARE_WRITE8_MEMBER(fm7_sub_ram_ports_banked_w);
-	DECLARE_READ8_MEMBER(fm7_console_ram_banked_r);
-	DECLARE_WRITE8_MEMBER(fm7_console_ram_banked_w);
 	DECLARE_WRITE8_MEMBER(fm7_irq_mask_w);
 	DECLARE_READ8_MEMBER(fm7_irq_cause_r);
 	DECLARE_WRITE8_MEMBER(fm7_beeper_w);

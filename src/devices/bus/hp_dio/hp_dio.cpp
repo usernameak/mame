@@ -268,10 +268,9 @@ void dio16_device::install_memory(offs_t start, offs_t end,
 	}
 }
 
-void dio16_device::install_bank(offs_t start, offs_t end, const char *tag, uint8_t *data)
+void dio16_device::install_bank(offs_t start, offs_t end, uint8_t *data)
 {
-	m_prgspace->install_readwrite_bank(start, end, 0, tag);
-	machine().root_device().membank(m_prgspace->device().siblingtag(tag).c_str())->set_base(data);
+	m_prgspace->install_ram(start, end, data);
 }
 
 void dio16_device::unmap_bank(offs_t start, offs_t end)
@@ -279,10 +278,9 @@ void dio16_device::unmap_bank(offs_t start, offs_t end)
 	m_prgspace->unmap_readwrite(start, end);
 }
 
-void dio16_device::install_rom(offs_t start, offs_t end, const char *tag, uint8_t *data)
+void dio16_device::install_rom(offs_t start, offs_t end, uint8_t *data)
 {
-	m_prgspace->install_read_bank(start, end, 0, tag);
-	machine().root_device().membank(m_prgspace->device().siblingtag(tag).c_str())->set_base(data);
+	m_prgspace->install_rom(start, end, data);
 }
 
 void dio16_device::unmap_rom(offs_t start, offs_t end)

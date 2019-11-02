@@ -934,10 +934,6 @@ void abc802_state::machine_reset()
 
 void abc806_state::machine_start()
 {
-	// allocate video RAM
-	uint32_t videoram_size = m_ram->size() - 0x8000;
-	m_video_ram.allocate(videoram_size);
-
 	// register for state saving
 	save_item(NAME(m_fetch_charram));
 	save_item(NAME(m_sb));

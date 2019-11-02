@@ -49,7 +49,7 @@ private:
 	std::function<u32 (offs_t)> m_r32;
 	std::function<u64 (offs_t)> m_r64;
 
-	memory_bank *m_bank;
+	memory_bank_creator m_bank;
 	int m_cur_bank, m_bank_count;
 
 	virtual void interface_pre_start() override;

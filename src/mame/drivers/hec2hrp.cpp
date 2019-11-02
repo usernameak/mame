@@ -91,7 +91,7 @@ void hec2hrp_state::hecdisc2_mem(address_map &map)
 {
 	map.unmap_value_high();
 
-	map(0x0000, 0x3fff).bankrw("bank3"); /* ROM at start up, RAM later */
+	map(0x0000, 0x3fff).bankrw("d2rom"); /* ROM at start up, RAM later */
 	map(0x4000, 0xffff).ram();
 }
 
@@ -132,14 +132,14 @@ void hec2hrp_state::hec2hrp_mem(address_map &map)
 	/* contiguous RAM */
 	map(0x4A00, 0xbfff).ram();
 	/* from 0xC000 to 0xFFFF => Bank Ram for video and data */
-	map(0xc000, 0xffff).ram().share("hector_videoram");
+	map(0xc000, 0xffff).ram().bankrw("hvram");
 }
 
 void hec2hrp_state::hec2hrx_mem(address_map &map)
 {
 	map.unmap_value_high();
 	/* Main ROM page*/
-	map(0x0000, 0x3fff).bankr("bank2");
+	map(0x0000, 0x3fff).bankr("rombank");
 
 	/* Hardware address mapping*/
 	map(0x0800, 0x0808).w(FUNC(hec2hrp_state::switch_bank_w));/* Bank handling */
@@ -155,7 +155,7 @@ void hec2hrp_state::hec2hrx_mem(address_map &map)
 	/* contiguous RAM */
 	map(0x4A00, 0xbfff).ram();
 	/* from 0xC000 to 0xFFFF => Bank Ram for video and data */
-	map(0xc000, 0xffff).bankrw("bank1").share("hector_videoram");
+	map(0xc000, 0xffff).bankrw("hvram");
 }
 
 void hec2hrp_state::hec2hrp_io(address_map &map)
@@ -310,25 +310,22 @@ MACHINE_START_MEMBER(hec2hrp_state,hec2hrx)
 	//RAMD2[0xff6b] = 0x0ff; // force verbose mode
 
 	// Memory install for bank switching
-	membank("bank1")->configure_entry(HECTOR_BANK_PROG , &RAM[0xc000]   );
-	membank("bank1")->configure_entry(HECTOR_BANK_VIDEO, m_hector_videoram_hrx); // Video RAM
+	m_hvram->configure_entry(HECTOR_BANK_PROG , &RAM[0xc000]   );
+	m_hvram->configure_entry(HECTOR_BANK_VIDEO, m_hector_videoram); // Video RAM
 
 	// Set bank HECTOR_BANK_PROG as basic bank
-	membank("bank1")->set_entry(HECTOR_BANK_PROG);
+	m_hvram->set_entry(HECTOR_BANK_PROG);
 
 	// MX-specific
-	membank("bank2")->configure_entry(HECTORMX_BANK_PAGE0 , &RAM[0x0000]);
-	membank("bank2")->configure_entry(HECTORMX_BANK_PAGE1 , memregion("page1")->base() ); // ROM page 1
-	membank("bank2")->configure_entry(HECTORMX_BANK_PAGE2 , memregion("page2")->base() ); // ROM page 2
-	membank("bank2")->set_entry(HECTORMX_BANK_PAGE0);
+	m_rombank->configure_entry(HECTORMX_BANK_PAGE0 , &RAM[0x0000]);
+	m_rombank->configure_entry(HECTORMX_BANK_PAGE1 , memregion("page1")->base() ); // ROM page 1
+	m_rombank->configure_entry(HECTORMX_BANK_PAGE2 , memregion("page2")->base() ); // ROM page 2
+	m_rombank->set_entry(HECTORMX_BANK_PAGE0);
 
 	// Disk II-specific
-	membank("bank3")->configure_entry(DISCII_BANK_ROM , memregion("rom_disc2")->base() ); // ROM
-	membank("bank3")->configure_entry(DISCII_BANK_RAM , memregion("disc2mem" )->base() ); // RAM
-	membank("bank3")->set_entry(DISCII_BANK_ROM);
-
-	// As video HR ram is in bank, use external memory
-	m_hector_videoram.set_target(m_hector_videoram_hrx,m_hector_videoram.bytes());
+	m_d2rom->configure_entry(DISCII_BANK_ROM , memregion("rom_disc2")->base() ); // ROM
+	m_d2rom->configure_entry(DISCII_BANK_RAM , memregion("disc2mem" )->base() ); // RAM
+	m_d2rom->set_entry(DISCII_BANK_ROM);
 
 	hector_init();
 }
@@ -340,20 +337,17 @@ MACHINE_START_MEMBER(hec2hrp_state,hec2mdhrx)
 	uint8_t *RAM   = memregion("maincpu")->base();
 
 	// Memory install for bank switching
-	membank("bank1")->configure_entry(HECTOR_BANK_PROG, &RAM[0xc000]);
-	membank("bank1")->configure_entry(HECTOR_BANK_VIDEO, m_hector_videoram_hrx); // Video RAM
+	m_hvram->configure_entry(HECTOR_BANK_PROG, &RAM[0xc000]);
+	m_hvram->configure_entry(HECTOR_BANK_VIDEO, m_hector_videoram); // Video RAM
 
 	// Set HECTOR_BANK_PROG as basic bank
-	membank("bank1")->set_entry(HECTOR_BANK_PROG);
+	m_hvram->set_entry(HECTOR_BANK_PROG);
 	//Here, bank 5 is not used for the language switch but for the floppy ROM
 
 	// Mini disk-specific
-	membank("bank2")->configure_entry(HECTOR_BANK_BASE, &RAM[0x0000]); // ROM base page
-	membank("bank2")->configure_entry(HECTOR_BANK_DISC, memregion("page2")->base() ); // ROM mini disc page
-	membank("bank2")->set_entry(HECTOR_BANK_BASE);
-
-	// As video HR ram is in bank, use external memory
-	m_hector_videoram.set_target(m_hector_videoram_hrx,m_hector_videoram.bytes());
+	m_rombank->configure_entry(HECTOR_BANK_BASE, &RAM[0x0000]); // ROM base page
+	m_rombank->configure_entry(HECTOR_BANK_DISC, memregion("page2")->base() ); // ROM mini disc page
+	m_rombank->set_entry(HECTOR_BANK_BASE);
 
 	hector_init();
 }
@@ -361,11 +355,11 @@ MACHINE_START_MEMBER(hec2hrp_state,hec2mdhrx)
 MACHINE_RESET_MEMBER(hec2hrp_state,hec2hrx)
 {
 	// Hector Memory
-	membank("bank1")->set_entry(HECTOR_BANK_PROG);
-	membank("bank2")->set_entry(HECTORMX_BANK_PAGE0);
+	m_hvram->set_entry(HECTOR_BANK_PROG);
+	m_hvram->set_entry(HECTORMX_BANK_PAGE0);
 
 	// DISK II Memory
-	membank("bank3")->set_entry(DISCII_BANK_ROM);
+	m_d2rom->set_entry(DISCII_BANK_ROM);
 
 	hector_reset(1, 1);
 	hector_disc2_reset();
@@ -618,70 +612,60 @@ void hec2hrp_state::hec2mx80(machine_config &config)
 }
 
 ROM_START( hec2hr )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x1000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "2hr.bin", 0x0000, 0x1000, CRC(84b9e672) SHA1(8c8b089166122eee565addaed10f84c5ce6d849b))
-	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
-	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
 ROM_END
 
 ROM_START( victor )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x1000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "victor.rom",  0x0000, 0x1000, CRC(d1e9508f) SHA1(d0f1bdcd39917fafc8859223ab38eee2a7dc85ff))
-	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
-	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
 ROM_END
 
 ROM_START( hec2hrp )
 	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "hector2hrp.rom", 0x0000, 0x4000, CRC(983f52e4) SHA1(71695941d689827356042ee52ffe55ce7e6b8ecd))
-	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
-	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
-	ROM_REGION( 0x10000, "disc2cpu", ROMREGION_ERASEFF )
-	ROM_REGION( 0x04000, "rom_disc2", ROMREGION_ERASEFF )
 ROM_END
 
 ROM_START( hec2hrx )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x4000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "hector2hrx.rom", 0x0000, 0x4000, CRC(f047c521) SHA1(744336b2acc76acd7c245b562bdc96dca155b066))
-	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
-	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
-	ROM_REGION( 0x10000, "disc2cpu", ROMREGION_ERASEFF )
 
-	ROM_REGION( 0x04000, "rom_disc2", ROMREGION_ERASEFF )
+	ROM_REGION( 0x1000, "rom_disc2", ROMREGION_ERASEFF )
 	ROM_LOAD( "d800k.bin" , 0x0000,0x1000, CRC(831bd584) SHA1(9782ee58f570042608d9d568b2c3fc4c6d87d8b9))
-	ROM_REGION( 0x10000,  "disc2mem", ROMREGION_ERASE00 )
 ROM_END
 
 // minidisc
 ROM_START( hec2mdhrx )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x4000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "mdic1.bin" , 0x0000,0x2000, CRC(ddda1065) SHA1(e7bba14a72605238d2f8299da029b8320a563254))
 	ROM_LOAD( "mdicmb.bin" , 0x2000,0x2000, CRC(d8090747) SHA1(f2925b68002307562e2ea5e36b740e5458f0f0eb))
 
-	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )  // Page 1 = unused page
 	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )  // Page 2 = minidisc page
 	ROM_LOAD( "mdic3.bin"  , 0x0000,0x2000, CRC(87801816) SHA1(ddf441f40df014b237cdf17430d1989f3a452d04))
 	ROM_LOAD( "mdicmb.bin" , 0x2000,0x2000, CRC(d8090747) SHA1(f2925b68002307562e2ea5e36b740e5458f0f0eb))
 ROM_END
 
 ROM_START( hec2mx80 )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x4000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx80c_page0.rom" , 0x0000,0x4000, CRC(a75945cf) SHA1(542391e482271be0997b069cf13c8b5dae28feec))
+
 	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx80c_page1.rom", 0x0000, 0x4000, CRC(4615f57c) SHA1(5de291bf3ae0320915133b99f1a088cb56c41658))
+
 	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx80c_page2.rom" , 0x0000,0x4000, CRC(2d5d975e) SHA1(48307132e0f3fad0262859bb8142d108f694a436))
 
 	ROM_REGION( 0x04000, "rom_disc2", ROMREGION_ERASEFF )
 	ROM_LOAD( "d800k.bin" , 0x0000,0x1000, CRC(831bd584) SHA1(9782ee58f570042608d9d568b2c3fc4c6d87d8b9))
-	ROM_REGION( 0x10000,  "disc2mem", ROMREGION_ERASE00 )
 ROM_END
 
 ROM_START( hec2mx40 )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x4000, "maincpu", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx40c_page0.rom" , 0x0000,0x4000, CRC(9bb5566d) SHA1(0c8c2e396ec8eb995d2b621abe06b6968ca5d0aa))
+
 	ROM_REGION( 0x4000, "page1", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx40c_page1.rom", 0x0000, 0x4000, CRC(192a76fa) SHA1(062aa6df0b554b85774d4b5edeea8496a4baca35))
+
 	ROM_REGION( 0x4000, "page2", ROMREGION_ERASEFF )
 	ROM_LOAD( "mx40c_page2.rom" , 0x0000,0x4000, CRC(ef1b2654) SHA1(66624ea040cb7ede4720ad2eca0738d0d3bad89a))
 
@@ -689,7 +673,6 @@ ROM_START( hec2mx40 )
 //  ROM_LOAD( "d360k.bin" , 0x0000,0x4000, CRC(2454eacb) SHA1(dc0d5a7d5891a7e422d9d142a2419527bb15dfd5))
 	ROM_LOAD( "d800k.bin" , 0x0000,0x1000, CRC(831bd584) SHA1(9782ee58f570042608d9d568b2c3fc4c6d87d8b9))
 //  ROM_LOAD( "d200k.bin" , 0x0000,0x4000, CRC(e2801377) SHA1(0926df5b417ecd8013e35c71b76780c5a25c1cbf))
-	ROM_REGION( 0x10000,  "disc2mem", ROMREGION_ERASE00 )
 ROM_END
 
 /* Driver */

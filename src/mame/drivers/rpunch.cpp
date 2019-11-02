@@ -205,11 +205,10 @@ WRITE8_MEMBER(rpunch_state::upd_data_w)
  *
  *************************************/
 
-void rpunch_state::main_map(address_map &map)
+void rpunch_state::svolley_map(address_map &map)
 {
 	map.global_mask(0xfffff);
 	map(0x000000, 0x03ffff).rom();
-	map(0x040000, 0x04ffff).ram().share("bitmapram");
 	map(0x060000, 0x060fff).ram().share("spriteram");
 	map(0x080000, 0x083fff).ram().w(FUNC(rpunch_state::rpunch_videoram_w)).share("videoram");
 	map(0x0a0000, 0x0a07ff).ram().w(m_palette, FUNC(palette_device::write16)).share("palette");
@@ -223,6 +222,12 @@ void rpunch_state::main_map(address_map &map)
 	map(0x0c001c, 0x0c001d).portr("DSW");
 	map(0x0c001e, 0x0c001f).r(FUNC(rpunch_state::sound_busy_r));
 	map(0x0fc000, 0x0fffff).ram();
+}
+
+void rpunch_state::main_map(address_map &map)
+{
+	svolley_map(map);
+	map(0x040000, 0x04ffff).ram().share("bitmapram");
 }
 
 void rpunch_state::svolleybl_main_map(address_map &map)
@@ -521,6 +526,7 @@ void rpunch_state::rpunch(machine_config &config)
 void rpunch_state::svolley(machine_config &config)
 {
 	rpunch(config);
+	m_maincpu->set_addrmap(AS_PROGRAM, &rpunch_state::svolley_map);
 	MCFG_VIDEO_START_OVERRIDE(rpunch_state,svolley)
 }
 
@@ -813,7 +819,6 @@ void rpunch_state::init_svolley()
 	/* the main differences between Super Volleyball and Rabbit Punch are */
 	/* the lack of direct-mapped bitmap and a different palette base for sprites */
 	m_sprite_palette = 0x080;
-	m_bitmapram.set_target(nullptr, 0);
 }
 
 

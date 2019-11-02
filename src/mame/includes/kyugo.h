@@ -37,8 +37,6 @@ public:
 	void legend(machine_config &config);
 	void gyrodine(machine_config &config);
 
-	void init_srdmissn();
-
 private:
 	DECLARE_WRITE_LINE_MEMBER(nmi_mask_w);
 	DECLARE_WRITE8_MEMBER(coin_counter_w);
@@ -61,6 +59,7 @@ private:
 	void gyrodine_sub_portmap(address_map &map);
 	void kyugo_main_map(address_map &map);
 	void kyugo_main_portmap(address_map &map);
+	void srdmissn_main_map(address_map &map);
 	void legend_sub_map(address_map &map);
 	void repulse_sub_map(address_map &map);
 	void repulse_sub_portmap(address_map &map);

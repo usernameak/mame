@@ -995,10 +995,8 @@ READ8_MEMBER(fm7_state::fm77av_video_flags_r)
 
 WRITE8_MEMBER(fm7_state::fm77av_video_flags_w)
 {
-	uint8_t* RAM = memregion("subsyscg")->base();
-
 	m_video.cgrom = data & 0x03;
-	membank("bank20")->set_base(RAM+(m_video.cgrom*0x800));
+	membank("bank20")->set_base(memregion("subsyscg")->base()+(m_video.cgrom*0x800));
 	m_video.fine_offset = data & 0x04;
 	m_video.active_video_page = data & 0x20;
 	m_video.display_video_page = data & 0x40;
@@ -1052,9 +1050,6 @@ WRITE8_MEMBER(fm7_state::fm77av_sub_modestatus_w)
  */
 WRITE8_MEMBER(fm7_state::fm77av_sub_bank_w)
 {
-//  uint8_t* RAM = memregion("sub")->base();
-	uint8_t* ROM;
-
 	if((data & 0x03) == (m_sb_prev & 0x03))
 		return;
 
@@ -1062,27 +1057,19 @@ WRITE8_MEMBER(fm7_state::fm77av_sub_bank_w)
 	switch (data & 0x03)
 	{
 		case 0x00:  // Type C, 640x200 (as used on the FM-7)
-			ROM = memregion("subsys_c")->base();
-		//  membank(20)->set_base(ROM);
-			membank("bank21")->set_base(ROM+0x800);
+			membank("bank21")->set_base(memregion("subsys_c")->base()+0x800);
 			logerror("VID: Sub ROM Type C selected\n");
 			break;
 		case 0x01:  // Type A, 640x200
-			ROM = memregion("subsys_a")->base();
-		//  membank(20)->set_base(RAM+0xd800);
-			membank("bank21")->set_base(ROM);
+			membank("bank21")->set_base(memregion("subsys_a")->base());
 			logerror("VID: Sub ROM Type A selected\n");
 			break;
 		case 0x02:  // Type B, 320x200
-			ROM = memregion("subsys_b")->base();
-		//  membank(20)->set_base(RAM+0xd800);
-			membank("bank21")->set_base(ROM);
+			membank("bank21")->set_base(memregion("subsys_b")->base());
 			logerror("VID: Sub ROM Type B selected\n");
 			break;
 		case 0x03:  // CG Font?
-			ROM = memregion("subsyscg")->base();
-		//  membank(20)->set_base(RAM+0xd800);
-			membank("bank21")->set_base(ROM);
+			membank("bank21")->set_base(memregion("subsyscg")->base());
 			logerror("VID: Sub ROM CG selected\n");
 			break;
 	}
@@ -1271,134 +1258,6 @@ TIMER_CALLBACK_MEMBER(fm7_state::fm77av_vsync)
 		m_video.vsync_flag = 0;
 		m_fm77av_vsync_timer->adjust(m_screen->time_until_vblank_end());
 	}
-}
-
-// called when banked into main CPU space by the MMR, available only if sub CPU is halted
-READ8_MEMBER(fm7_state::fm7_sub_ram_ports_banked_r)
-{
-	uint8_t* RAM = memregion("maincpu")->base();
-	uint8_t* ROM;
-
-	if(!m_video.sub_halt)
-		return 0xff;
-
-	if(offset < 0x380)  // work RAM
-		return RAM[0x1d000+offset];
-	if(offset >= 0x380 && offset < 0x400) // shared RAM
-		return m_shared_ram[offset-0x380];
-	if(offset >= 0x500 && offset < 0x800) // work RAM
-		return RAM[0x1d000+offset];
-	if(offset > 0x800) // CGROM
-	{
-		ROM = memregion("subsyscg")->base();
-		return ROM[(m_video.cgrom*0x800)+(offset-0x800)];
-	}
-
-	if(offset >= 0x410 && offset <= 0x42b)
-		return fm77av_alu_r(space,offset-0x410);
-
-	switch(offset)
-	{
-		case 0x400:
-		case 0x401:
-			return fm7_sub_keyboard_r(space,offset-0x400);
-		case 0x402:
-			return fm7_cancel_ack(space,0);
-		case 0x403:
-			return fm7_sub_beeper_r(space,0);
-		case 0x404:
-			return fm7_attn_irq_r(space,0);
-		case 0x408:
-			return fm7_crt_r(space,0);
-		case 0x409:
-			return fm7_vram_access_r(space,0);
-		case 0x40a:
-			return fm7_sub_busyflag_r(space,0);
-		case 0x430:
-			return fm77av_video_flags_r(space,0);
-		case 0x431:
-		case 0x432:
-			return fm77av_key_encoder_r(space,offset-0x431);
-		default:
-			logerror("Unmapped read from sub CPU port 0xd%03x via MMR banking\n",offset);
-			return 0xff;
-	}
-}
-
-WRITE8_MEMBER(fm7_state::fm7_sub_ram_ports_banked_w)
-{
-	uint8_t* RAM = memregion("maincpu")->base();
-
-	if(!m_video.sub_halt)
-		return;
-
-	if(offset < 0x380)  // work RAM
-	{
-		RAM[0x1d000+offset] = data;
-		return;
-	}
-	if(offset >= 0x380 && offset < 0x400) // shared RAM
-	{
-		m_shared_ram[offset-0x380] = data;
-		return;
-	}
-	if(offset >= 0x500 && offset < 0x800) // work RAM
-	{
-		RAM[0x1d000+offset] = data;
-		return;
-	}
-
-	if(offset >= 0x410 && offset <= 0x42b)
-	{
-		fm77av_alu_w(space,offset-0x410,data);
-		return;
-	}
-
-	switch(offset)
-	{
-		case 0x408:
-			fm7_crt_w(space,0,data);
-			break;
-		case 0x409:
-			fm7_vram_access_w(space,0,data);
-			break;
-		case 0x40a:
-			fm7_sub_busyflag_w(space,0,data);
-			break;
-		case 0x40e:
-		case 0x40f:
-			fm7_vram_offset_w(space,offset-0x40e,data);
-			break;
-		case 0x430:
-			fm77av_video_flags_w(space,0,data);
-			break;
-		case 0x431:
-		case 0x432:
-			fm77av_key_encoder_w(space,offset-0x431,data);
-			break;
-		default:
-			logerror("Unmapped write of 0x%02x to sub CPU port 0xd%03x via MMR banking\n",data,offset);
-	}
-}
-
-READ8_MEMBER(fm7_state::fm7_console_ram_banked_r)
-{
-	uint8_t* RAM = memregion("maincpu")->base();
-
-	if(!m_video.sub_halt)
-		return 0xff;
-
-	return RAM[0x1c000+offset];
-}
-
-WRITE8_MEMBER(fm7_state::fm7_console_ram_banked_w)
-{
-	uint8_t* RAM = memregion("maincpu")->base();
-
-	if(!m_video.sub_halt)
-		return;
-
-	RAM[0x1c000+offset] = data;
 }
 
 void fm7_state::video_start()

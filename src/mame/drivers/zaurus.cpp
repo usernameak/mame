@@ -1467,7 +1467,7 @@ WRITE32_MEMBER(zaurus_state::rtc_w)
 
 void zaurus_state::zaurus_map(address_map &map)
 {
-	map(0x00000000, 0x001fffff).ram().region("firmware", 0);
+	map(0x00000000, 0x001fffff).rom().region("firmware", 0);
 	map(0x40900000, 0x4090000f).rw(FUNC(zaurus_state::rtc_r), FUNC(zaurus_state::rtc_w));
 	map(0x40000000, 0x400002ff).rw(m_pxa_periphs, FUNC(pxa255_periphs_device::dma_r), FUNC(pxa255_periphs_device::dma_w));
 	map(0x40400000, 0x40400083).rw(m_pxa_periphs, FUNC(pxa255_periphs_device::i2s_r), FUNC(pxa255_periphs_device::i2s_w));

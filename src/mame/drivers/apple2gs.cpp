@@ -1243,8 +1243,7 @@ void apple2gs_state::machine_start()
 	int ramsize = m_ram_size - 0x40000;
 
 	// ROM 00/01 hardware: the quoted "256K" for a base machine *does* include banks e0/e1.
-	space.install_readwrite_bank(0x020000, ramsize - 1 + 0x20000, "bank1");
-	membank("bank1")->set_base(m_ram_ptr + 0x040000);
+	space.install_ram(0x020000, ramsize - 1 + 0x20000, m_ram_ptr + 0x040000);
 
 	// setup save states
 	save_item(NAME(m_speaker_state));

@@ -18,6 +18,7 @@ public:
 		, m_work_ram(*this, "work_ram")
 		, m_work_ram_1(*this, "work_ram_1")
 		, m_gfx1_rom(*this, "gfx1")
+		, m_chr_banks(*this, "chr%u", 0U)
 	{
 	}
 
@@ -57,6 +58,7 @@ private:
 	optional_shared_ptr<uint8_t> m_work_ram_1;
 
 	optional_memory_region m_gfx1_rom;
+	memory_bank_array_creator<8> m_chr_banks;
 
 	DECLARE_WRITE8_MEMBER(sprite_dma_0_w);
 	DECLARE_WRITE8_MEMBER(sprite_dma_1_w);
@@ -120,6 +122,7 @@ private:
 	int m_sound_fix;
 	uint8_t m_last_bank;
 	std::unique_ptr<uint8_t[]> m_vram;
+	std::unique_ptr<uint8_t[]> m_extraram;
 	uint8_t* m_vrom[2];
 	std::unique_ptr<uint8_t[]> m_nt_ram[2];
 	uint8_t* m_nt_page[2][4];

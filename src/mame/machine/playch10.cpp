@@ -554,9 +554,6 @@ WRITE8_MEMBER(playch10_state::aboard_vrom_switch_w)
 
 void playch10_state::init_pcaboard()
 {
-	/* switches vrom with writes to the $803e-$8041 area */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0x8fff, write8_delegate(*this, FUNC(playch10_state::aboard_vrom_switch_w)));
-
 	/* common init */
 	init_playch10();
 
@@ -586,9 +583,6 @@ void playch10_state::init_pcbboard()
 	/* Copy the initial banks */
 	memcpy(&prg[0x08000], &prg[0x28000], 0x8000);
 
-	/* Roms are banked at $8000 to $bfff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::bboard_rom_switch_w)));
-
 	/* common init */
 	init_playch10();
 
@@ -611,9 +605,6 @@ WRITE8_MEMBER(playch10_state::cboard_vrom_switch_w)
 
 void playch10_state::init_pccboard()
 {
-	/* switches vrom with writes to $6000 */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x6000, 0x6000, write8_delegate(*this, FUNC(playch10_state::cboard_vrom_switch_w)));
-
 	/* we have no vram, make sure switching games doesn't point to an old allocation */
 	m_vram = nullptr;
 
@@ -634,10 +625,6 @@ void playch10_state::init_pcdboard()
 
 	m_mmc1_rom_mask = 0x07;
 
-	/* MMC mapper at writes to $8000-$ffff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::mmc1_rom_switch_w)));
-
-
 	/* common init */
 	init_playch10();
 	/* allocate vram */
@@ -650,9 +637,6 @@ void playch10_state::init_pcdboard()
 
 void playch10_state::init_pcdboard_2()
 {
-	/* extra ram at $6000-$7fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
-
 	/* common init */
 	init_pcdboard();
 
@@ -745,14 +729,8 @@ void playch10_state::init_pceboard()
 	/* Copy the initial banks */
 	memcpy(&prg[0x08000], &prg[0x28000], 0x8000);
 
-	/* basically a mapper 9 on a nes */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::eboard_rom_switch_w)));
-
 	/* ppu_latch callback */
 	m_ppu->set_latch(*this, FUNC(playch10_state::mapper9_latch));
-
-	/* nvram at $6000-$6fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x6fff);
 
 	/* common init */
 	init_playch10();
@@ -775,9 +753,6 @@ void playch10_state::init_pcfboard()
 
 	m_mmc1_rom_mask = ((len - 0x10000) / 0x4000) - 1;
 
-	/* MMC mapper at writes to $8000-$ffff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::mmc1_rom_switch_w)));
-
 	/* common init */
 	init_playch10();
 }
@@ -786,9 +761,6 @@ void playch10_state::init_pcfboard()
 
 void playch10_state::init_pcfboard_2()
 {
-	/* extra ram at $6000-$6fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x6fff);
-
 	m_vram = nullptr;
 
 	/* common init */
@@ -959,12 +931,6 @@ void playch10_state::init_pcgboard()
 	memcpy(&prg[0x08000], &prg[0x4c000], 0x4000);
 	memcpy(&prg[0x0c000], &prg[0x4c000], 0x4000);
 
-	/* MMC3 mapper at writes to $8000-$ffff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::gboard_rom_switch_w)));
-
-	/* extra ram at $6000-$7fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
-
 	m_gboard_banks[0] = 0x1e;
 	m_gboard_banks[1] = 0x1f;
 	m_gboard_scanline_counter = 0;
@@ -1012,9 +978,6 @@ void playch10_state::init_pciboard()
 	/* We do manual banking, in case the code falls through */
 	/* Copy the initial banks */
 	memcpy(&prg[0x08000], &prg[0x10000], 0x8000);
-
-	/* Roms are banked at $8000 to $bfff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::iboard_rom_switch_w)));
 
 	/* common init */
 	init_playch10();
@@ -1080,12 +1043,6 @@ void playch10_state::init_pchboard()
 	memcpy(&prg[0x08000], &prg[0x4c000], 0x4000);
 	memcpy(&prg[0x0c000], &prg[0x4c000], 0x4000);
 
-	/* Roms are banked at $8000 to $bfff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::hboard_rom_switch_w)));
-
-	/* extra ram at $6000-$7fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
-
 	m_gboard_banks[0] = 0x1e;
 	m_gboard_banks[1] = 0x1f;
 	m_gboard_scanline_counter = 0;
@@ -1111,12 +1068,6 @@ void playch10_state::init_pckboard()
 	memcpy(&prg[0x08000], &prg[0x48000], 0x8000);
 
 	m_mmc1_rom_mask = 0x0f;
-
-	/* extra ram at $6000-$7fff */
-	m_cartcpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
-
-	/* Roms are banked at $8000 to $bfff */
-	m_cartcpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(playch10_state::mmc1_rom_switch_w)));
 
 	/* common init */
 	init_playch10();

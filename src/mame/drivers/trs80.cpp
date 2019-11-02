@@ -249,7 +249,7 @@ void trs80_state::lnw_banked_mem(address_map &map)
 	map(0x37ef, 0x37ef).rw(m_fdc, FUNC(fd1793_device::data_r), FUNC(fd1793_device::data_w));
 	map(0x3800, 0x3bff).r(FUNC(trs80_state::keyboard_r));
 	map(0x3c00, 0x3fff).ram().share(m_p_videoram);
-	map(0x4000, 0x7fff).ram().share(m_p_gfxram).region("gfx2", 0);
+	map(0x4000, 0x7fff).ram().share(m_p_gfxram);
 }
 
 void trs80_state::lnw80_io(address_map &map)
@@ -725,8 +725,6 @@ ROM_START(lnw80)
 
 	ROM_REGION(0x0800, "chargen",0)
 	ROM_LOAD("lnw_chr.bin",  0x0000, 0x0800, CRC(c89b27df) SHA1(be2a009a07e4378d070002a558705e9a0de59389))
-
-	ROM_REGION(0x4000, "gfx2", ROMREGION_ERASEFF) // for trs80_gfxram
 ROM_END
 
 

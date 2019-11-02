@@ -249,24 +249,24 @@ READ8_MEMBER( super80_state::super80_read_ff ) { return 0xff; }
 void super80_state::super80_map(address_map &map)
 {
 	map(0x0000, 0x3fff).bankrw("boot").region("maincpu", 0x0000);
-	map(0x4000, 0xbfff).ram().region("maincpu", 0x4000);
-	map(0xc000, 0xefff).rom();
+	map(0x4000, 0xbfff).ram();
+	map(0xc000, 0xefff).rom().region("maincpu", 0);
 	map(0xf000, 0xffff).r(FUNC(super80_state::super80_read_ff)).nopw();
 }
 
 void super80_state::super80m_map(address_map &map)
 {
 	map(0x0000, 0x3fff).bankrw("boot").region("maincpu", 0x0000);
-	map(0x4000, 0xbfff).ram().region("maincpu", 0x4000);
-	map(0xc000, 0xefff).rom();
-	map(0xf000, 0xffff).ram().region("maincpu", 0xf000);
+	map(0x4000, 0xbfff).ram();
+	map(0xc000, 0xefff).rom().region("maincpu", 0);
+	map(0xf000, 0xffff).ram();
 }
 
 void super80_state::super80v_map(address_map &map)
 {
 	map(0x0000, 0x3fff).bankrw("boot");
 	map(0x4000, 0xbfff).ram();
-	map(0xc000, 0xefff).rom();
+	map(0xc000, 0xefff).rom().region("maincpu", 0);
 	map(0xf000, 0xf7ff).rw(FUNC(super80_state::super80v_low_r), FUNC(super80_state::super80v_low_w));
 	map(0xf800, 0xffff).rw(FUNC(super80_state::super80v_high_r), FUNC(super80_state::super80v_high_w));
 }
@@ -635,7 +635,7 @@ GFXDECODE_END
 
 /* This will show the 128 characters in the ROM + whatever happens to be in the PCG */
 static GFXDECODE_START( gfx_super80v )
-	GFXDECODE_ENTRY( "maincpu", 0xf000, super80v_charlayout, 2, 6 )
+	GFXDECODE_ENTRY( "maincpu", 0x3000, super80v_charlayout, 2, 6 )
 GFXDECODE_END
 
 
@@ -897,88 +897,88 @@ void super80_state::super80r(machine_config &config)
 /**************************** ROMS *****************************************************************/
 
 ROM_START( super80 )
-	ROM_REGION(0x10000, "maincpu", 0)
-	ROM_LOAD("super80.u26",   0xc000, 0x1000, CRC(6a6a9664) SHA1(2c4fcd943aa9bf7419d58fbc0e28ffb89ef22e0b) )
-	ROM_LOAD("super80.u33",   0xd000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
-	ROM_LOAD("super80.u42",   0xe000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
-	ROM_FILL( 0xf000, 0x1000, 0xff) /* This makes the screen show the FF character when O F1 F0 entered */
+	ROM_REGION(0x4000, "maincpu", 0)
+	ROM_LOAD("super80.u26",   0x0000, 0x1000, CRC(6a6a9664) SHA1(2c4fcd943aa9bf7419d58fbc0e28ffb89ef22e0b) )
+	ROM_LOAD("super80.u33",   0x1000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
+	ROM_LOAD("super80.u42",   0x2000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
+	ROM_FILL( 0x3000, 0x1000, 0xff) /* This makes the screen show the FF character when O F1 F0 entered */
 
 	ROM_REGION(0x0400, "chargen", 0)    // 2513 prom
 	ROM_LOAD("super80.u27",   0x0000, 0x0400, CRC(d1e4b3c6) SHA1(3667b97c6136da4761937958f281609690af4081) )
 ROM_END
 
 ROM_START( super80d )
-	ROM_REGION(0x10000, "maincpu", 0)
+	ROM_REGION(0x4000, "maincpu", 0)
 	ROM_SYSTEM_BIOS(0, "super80d", "V2.2")
-	ROMX_LOAD("super80d.u26", 0xc000, 0x1000, CRC(cebd2613) SHA1(87b94cc101a5948ce590211c68272e27f4cbe95a), ROM_BIOS(0))
+	ROMX_LOAD("super80d.u26", 0x0000, 0x1000, CRC(cebd2613) SHA1(87b94cc101a5948ce590211c68272e27f4cbe95a), ROM_BIOS(0))
 	ROM_SYSTEM_BIOS(1, "super80f", "MDS (original)")
-	ROMX_LOAD("super80f.u26", 0xc000, 0x1000, CRC(d39775f0) SHA1(b47298ee028924612e9728bb2debd0f47399add7), ROM_BIOS(1))
+	ROMX_LOAD("super80f.u26", 0x0000, 0x1000, CRC(d39775f0) SHA1(b47298ee028924612e9728bb2debd0f47399add7), ROM_BIOS(1))
 	ROM_SYSTEM_BIOS(2, "super80g", "MDS (upgraded)")
-	ROMX_LOAD("super80g.u26", 0xc000, 0x1000, CRC(7386f507) SHA1(69d7627033d62bd4e886ccc136e89f1524d38f47), ROM_BIOS(2))
-	ROM_LOAD("super80.u33",   0xd000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
-	ROM_LOAD("super80.u42",   0xe000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
-	ROM_FILL( 0xf000, 0x1000, 0xff)
+	ROMX_LOAD("super80g.u26", 0x0000, 0x1000, CRC(7386f507) SHA1(69d7627033d62bd4e886ccc136e89f1524d38f47), ROM_BIOS(2))
+	ROM_LOAD("super80.u33",   0x1000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
+	ROM_LOAD("super80.u42",   0x2000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
+	ROM_FILL( 0x3000, 0x1000, 0xff)
 
 	ROM_REGION(0x0800, "chargen", 0)    // 2716 eprom
 	ROM_LOAD("super80d.u27",  0x0000, 0x0800, CRC(cb4c81e2) SHA1(8096f21c914fa76df5d23f74b1f7f83bd8645783) )
 ROM_END
 
 ROM_START( super80e )
-	ROM_REGION(0x10000, "maincpu", 0)
-	ROM_LOAD("super80e.u26",  0xc000, 0x1000, CRC(bdc668f8) SHA1(3ae30b3cab599fca77d5e461f3ec1acf404caf07) )
-	ROM_LOAD("super80.u33",   0xd000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
-	ROM_LOAD("super80.u42",   0xe000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
-	ROM_FILL( 0xf000, 0x1000, 0xff)
+	ROM_REGION(0x4000, "maincpu", 0)
+	ROM_LOAD("super80e.u26",  0x0000, 0x1000, CRC(bdc668f8) SHA1(3ae30b3cab599fca77d5e461f3ec1acf404caf07) )
+	ROM_LOAD("super80.u33",   0x1000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
+	ROM_LOAD("super80.u42",   0x2000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
+	ROM_FILL( 0x3000, 0x1000, 0xff)
 
 	ROM_REGION(0x1000, "chargen", 0)    // 2732 eprom
 	ROM_LOAD("super80e.u27",  0x0000, 0x1000, CRC(ebe763a7) SHA1(ffaa6d6a2c5dacc5a6651514e6707175a32e83e8) )
 ROM_END
 
 ROM_START( super80m )
-	ROM_REGION(0x10000, "maincpu", 0)
+	ROM_REGION(0x4000, "maincpu", 0)
 	ROM_SYSTEM_BIOS(0, "8r0", "8R0")
-	ROMX_LOAD("s80-8r0.u26",  0xc000, 0x1000, CRC(48d410d8) SHA1(750d984abc013a3344628300288f6d1ba140a95f), ROM_BIOS(0) )
-	ROMX_LOAD("s80-8r0.u33",  0xd000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(0) )
-	ROMX_LOAD("s80-8r0.u42",  0xe000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(0) )
+	ROMX_LOAD("s80-8r0.u26",  0x0000, 0x1000, CRC(48d410d8) SHA1(750d984abc013a3344628300288f6d1ba140a95f), ROM_BIOS(0) )
+	ROMX_LOAD("s80-8r0.u33",  0x1000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(0) )
+	ROMX_LOAD("s80-8r0.u42",  0x2000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(0) )
 #if 0
 	/* Temporary patch to fix crash when lprinting a tab */
-	ROM_FILL(0xcc44,1,0x46)
-	ROM_FILL(0xcc45,1,0xc5)
-	ROM_FILL(0xcc46,1,0x06)
-	ROM_FILL(0xcc47,1,0x20)
-	ROM_FILL(0xcc48,1,0xcd)
-	ROM_FILL(0xcc49,1,0xc7)
-	ROM_FILL(0xcc4a,1,0xcb)
-	ROM_FILL(0xcc4b,1,0xc1)
-	ROM_FILL(0xcc4c,1,0x10)
-	ROM_FILL(0xcc4d,1,0xf7)
-	ROM_FILL(0xcc4e,1,0x00)
-	ROM_FILL(0xcc4f,1,0x00)
+	ROM_FILL(0x0c44,1,0x46)
+	ROM_FILL(0x0c45,1,0xc5)
+	ROM_FILL(0x0c46,1,0x06)
+	ROM_FILL(0x0c47,1,0x20)
+	ROM_FILL(0x0c48,1,0xcd)
+	ROM_FILL(0x0c49,1,0xc7)
+	ROM_FILL(0x0c4a,1,0xcb)
+	ROM_FILL(0x0c4b,1,0xc1)
+	ROM_FILL(0x0c4c,1,0x10)
+	ROM_FILL(0x0c4d,1,0xf7)
+	ROM_FILL(0x0c4e,1,0x00)
+	ROM_FILL(0x0c4f,1,0x00)
 #endif
 	ROM_SYSTEM_BIOS(1, "v37", "V3.7")
-	ROMX_LOAD("s80-v37.u26",  0xc000, 0x1000, CRC(46043035) SHA1(1765105df4e4af83d56cafb88e158ed462d4709e), ROM_BIOS(1) )
-	ROMX_LOAD("s80-v37.u33",  0xd000, 0x1000, CRC(afb52b15) SHA1(0a2c25834074ce44bf12ac8532b4add492bcf950), ROM_BIOS(1) )
-	ROMX_LOAD("s80-v37.u42",  0xe000, 0x1000, CRC(7344b27a) SHA1(f43fc47ddb5c12bffffa63488301cd5eb386cc9a), ROM_BIOS(1) )
+	ROMX_LOAD("s80-v37.u26",  0x0000, 0x1000, CRC(46043035) SHA1(1765105df4e4af83d56cafb88e158ed462d4709e), ROM_BIOS(1) )
+	ROMX_LOAD("s80-v37.u33",  0x1000, 0x1000, CRC(afb52b15) SHA1(0a2c25834074ce44bf12ac8532b4add492bcf950), ROM_BIOS(1) )
+	ROMX_LOAD("s80-v37.u42",  0x2000, 0x1000, CRC(7344b27a) SHA1(f43fc47ddb5c12bffffa63488301cd5eb386cc9a), ROM_BIOS(1) )
 
 	ROM_SYSTEM_BIOS(2, "8r2", "8R2")
-	ROMX_LOAD("s80-8r2.u26",  0xc000, 0x1000, CRC(1e166c8c) SHA1(15647614be9300cdd2956da913e83234c36b36a9), ROM_BIOS(2) )
-	ROMX_LOAD("s80-8r0.u33",  0xd000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(2) )
-	ROMX_LOAD("s80-8r0.u42",  0xe000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(2) )
+	ROMX_LOAD("s80-8r2.u26",  0x0000, 0x1000, CRC(1e166c8c) SHA1(15647614be9300cdd2956da913e83234c36b36a9), ROM_BIOS(2) )
+	ROMX_LOAD("s80-8r0.u33",  0x1000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(2) )
+	ROMX_LOAD("s80-8r0.u42",  0x2000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(2) )
 
 	ROM_SYSTEM_BIOS(3, "8r3", "8R3")
-	ROMX_LOAD("s80-8r3.u26",  0xc000, 0x1000, CRC(ee7dd90b) SHA1(c53f8eef82e8f943642f6ddfc2cb1bfdc32d25ca), ROM_BIOS(3) )
-	ROMX_LOAD("s80-8r0.u33",  0xd000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(3) )
-	ROMX_LOAD("s80-8r0.u42",  0xe000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(3) )
+	ROMX_LOAD("s80-8r3.u26",  0x0000, 0x1000, CRC(ee7dd90b) SHA1(c53f8eef82e8f943642f6ddfc2cb1bfdc32d25ca), ROM_BIOS(3) )
+	ROMX_LOAD("s80-8r0.u33",  0x1000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(3) )
+	ROMX_LOAD("s80-8r0.u42",  0x2000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(3) )
 
 	ROM_SYSTEM_BIOS(4, "8r4", "8R4")
-	ROMX_LOAD("s80-8r4.u26",  0xc000, 0x1000, CRC(637d001d) SHA1(f26b5ecc33fd44b05b1f199d79e0f072ec8d0e23), ROM_BIOS(4) )
-	ROMX_LOAD("s80-8r0.u33",  0xd000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(4) )
-	ROMX_LOAD("s80-8r0.u42",  0xe000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(4) )
+	ROMX_LOAD("s80-8r4.u26",  0x0000, 0x1000, CRC(637d001d) SHA1(f26b5ecc33fd44b05b1f199d79e0f072ec8d0e23), ROM_BIOS(4) )
+	ROMX_LOAD("s80-8r0.u33",  0x1000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(4) )
+	ROMX_LOAD("s80-8r0.u42",  0x2000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(4) )
 
 	ROM_SYSTEM_BIOS(5, "8r5", "8R5")
-	ROMX_LOAD("s80-8r5.u26",  0xc000, 0x1000, CRC(294f217c) SHA1(f352d54e84e94bf299726dc3af4eb7b2d06d317c), ROM_BIOS(5) )
-	ROMX_LOAD("s80-8r0.u33",  0xd000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(5) )
-	ROMX_LOAD("s80-8r0.u42",  0xe000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(5) )
+	ROMX_LOAD("s80-8r5.u26",  0x0000, 0x1000, CRC(294f217c) SHA1(f352d54e84e94bf299726dc3af4eb7b2d06d317c), ROM_BIOS(5) )
+	ROMX_LOAD("s80-8r0.u33",  0x1000, 0x1000, CRC(9765793e) SHA1(4951b127888c1f3153004cc9fb386099b408f52c), ROM_BIOS(5) )
+	ROMX_LOAD("s80-8r0.u42",  0x2000, 0x1000, CRC(5f65d94b) SHA1(fe26b54dec14e1c4911d996c9ebd084a38dcb691), ROM_BIOS(5) )
 
 	ROM_REGION(0x1800, "chargen", 0)
 	ROM_LOAD("super80e.u27",  0x0000, 0x1000, CRC(ebe763a7) SHA1(ffaa6d6a2c5dacc5a6651514e6707175a32e83e8) )
@@ -986,29 +986,23 @@ ROM_START( super80m )
 ROM_END
 
 ROM_START( super80r )
-	ROM_REGION( 0x10000, "maincpu", 0 )
+	ROM_REGION( 0x4000, "maincpu", 0 )
 	ROM_SYSTEM_BIOS(0, "super80r", "MCE (original)")
-	ROMX_LOAD("super80r.u26", 0xc000, 0x1000, CRC(01bb6406) SHA1(8e275ecf5141b93f86e45ff8a735b965ea3e8d44), ROM_BIOS(0))
+	ROMX_LOAD("super80r.u26", 0x0000, 0x1000, CRC(01bb6406) SHA1(8e275ecf5141b93f86e45ff8a735b965ea3e8d44), ROM_BIOS(0))
 	ROM_SYSTEM_BIOS(1, "super80s", "MCE (upgraded)")
-	ROMX_LOAD("super80s.u26", 0xc000, 0x1000, CRC(3e29d307) SHA1(b3f4667633e0a4eb8577e39b5bd22e1f0bfbc0a9), ROM_BIOS(1))
+	ROMX_LOAD("super80s.u26", 0x0000, 0x1000, CRC(3e29d307) SHA1(b3f4667633e0a4eb8577e39b5bd22e1f0bfbc0a9), ROM_BIOS(1))
 
-	ROM_LOAD("super80.u33",   0xd000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
-	ROM_LOAD("super80.u42",   0xe000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
-	ROM_LOAD("s80hmce.ic24",  0xf000, 0x0800, CRC(a6488a1e) SHA1(7ba613d70a37a6b738dcd80c2bb9988ff1f011ef) )
-
-	ROM_REGION( 0x1000, "videoram", ROMREGION_ERASEFF )
-	ROM_REGION( 0x1000, "colorram", ROMREGION_ERASEFF )
+	ROM_LOAD("super80.u33",   0x1000, 0x1000, CRC(cf8020a8) SHA1(2179a61f80372cd49e122ad3364773451531ae85) )
+	ROM_LOAD("super80.u42",   0x2000, 0x1000, CRC(a1c6cb75) SHA1(d644ca3b399c1a8902f365c6095e0bbdcea6733b) )
+	ROM_LOAD("s80hmce.ic24",  0x3000, 0x0800, CRC(a6488a1e) SHA1(7ba613d70a37a6b738dcd80c2bb9988ff1f011ef) )
 ROM_END
 
 ROM_START( super80v )
 	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD("s80-v37v.u26",  0xc000, 0x1000, CRC(01e0c0dd) SHA1(ef66af9c44c651c65a21d5bda939ffa100078c08) )
-	ROM_LOAD("s80-v37v.u33",  0xd000, 0x1000, CRC(812ad777) SHA1(04f355bea3470a7d9ea23bb2811f6af7d81dc400) )
-	ROM_LOAD("s80-v37v.u42",  0xe000, 0x1000, CRC(e02e736e) SHA1(57b0264c805da99234ab5e8e028fca456851a4f9) )
-	ROM_LOAD("s80hmce.ic24",  0xf000, 0x0800, CRC(a6488a1e) SHA1(7ba613d70a37a6b738dcd80c2bb9988ff1f011ef) )
-
-	ROM_REGION( 0x1000, "videoram", ROMREGION_ERASEFF )
-	ROM_REGION( 0x1000, "colorram", ROMREGION_ERASEFF )
+	ROM_LOAD("s80-v37v.u26",  0x0000, 0x1000, CRC(01e0c0dd) SHA1(ef66af9c44c651c65a21d5bda939ffa100078c08) )
+	ROM_LOAD("s80-v37v.u33",  0x1000, 0x1000, CRC(812ad777) SHA1(04f355bea3470a7d9ea23bb2811f6af7d81dc400) )
+	ROM_LOAD("s80-v37v.u42",  0x2000, 0x1000, CRC(e02e736e) SHA1(57b0264c805da99234ab5e8e028fca456851a4f9) )
+	ROM_LOAD("s80hmce.ic24",  0x3000, 0x0800, CRC(a6488a1e) SHA1(7ba613d70a37a6b738dcd80c2bb9988ff1f011ef) )
 ROM_END
 
 /*    YEAR  NAME      PARENT COMPAT MACHINE   INPUT     CLASS          INIT          COMPANY                   FULLNAME */

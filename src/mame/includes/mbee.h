@@ -58,6 +58,8 @@ public:
 		, m_io_newkb(*this, "Y.%u", 0)
 		, m_io_config(*this, "CONFIG")
 		, m_screen(*this, "screen")
+		, m_bankr(*this, "bankr%u", 0U)
+		, m_bankw(*this, "bankw%u", 0U)
 	{ }
 
 	void mbee56(machine_config &config);
@@ -199,6 +201,7 @@ private:
 	optional_ioport_array<15> m_io_newkb;
 	required_ioport m_io_config;
 	required_device<screen_device> m_screen;
+	optional_memory_bank_array<16> m_bankr, m_bankw;
 };
 
 #endif // MAME_INCLUDES_MBEE_H

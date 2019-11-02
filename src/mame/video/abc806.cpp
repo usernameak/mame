@@ -429,10 +429,6 @@ void abc806_state::video_start()
 	m_d_vsync = 1;
 	m_vsync = 1;
 	m_40 = 1;
-
-	// allocate memory
-	m_char_ram.allocate(ABC806_CHAR_RAM_SIZE);
-	m_attr_ram.allocate(ABC806_ATTR_RAM_SIZE);
 }
 
 

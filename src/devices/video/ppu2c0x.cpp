@@ -165,7 +165,7 @@ ppu2c0x_device::ppu2c0x_device(const machine_config &mconfig, device_type type, 
 }
 
 ppu2c0x_rgb_device::ppu2c0x_rgb_device(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock) : ppu2c0x_device(mconfig, type, tag, owner, clock)
-	, m_palette_data(*this, "palette", 0xc0)
+	, m_palette_data(*this, "palette")
 {
 }
 

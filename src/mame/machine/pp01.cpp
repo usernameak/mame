@@ -86,12 +86,9 @@ void pp01_state::set_memory(uint8_t block, uint8_t data)
 	address_space &space = m_maincpu->space(AS_PROGRAM);
 	uint16_t startaddr = block*0x1000;
 	uint16_t endaddr   = ((block+1)*0x1000)-1;
-	uint8_t  blocknum  = block + 1;
-	char bank[10];
-	sprintf(bank,"bank%d",blocknum);
 	if (data>=0xE0 && data<=0xEF) {
 		// This is RAM
-		space.install_read_bank (startaddr, endaddr, bank);
+		space.install_rom(startaddr, endaddr, m_ram->pointer() + (data & 0x0F)* 0x1000);
 		switch(data) {
 		case 0xe6 :
 			space.install_write_handler(startaddr, endaddr, write8_delegate(*this, FUNC(pp01_state::video_r_1_w)));
@@ -112,15 +109,13 @@ void pp01_state::set_memory(uint8_t block, uint8_t data)
 			space.install_write_handler(startaddr, endaddr, write8_delegate(*this, FUNC(pp01_state::video_b_2_w)));
 			break;
 		default:
-			space.install_write_bank(startaddr, endaddr, bank);
+			space.install_writeonly(startaddr, endaddr, m_ram->pointer() + (data & 0x0F)* 0x1000);
 			break;
 		}
 
-		membank(bank)->set_base(m_ram->pointer() + (data & 0x0F)* 0x1000);
 	} else if (data>=0xF8) {
-		space.install_read_bank (startaddr, endaddr, bank);
+		space.install_rom (startaddr, endaddr, mem + ((data & 0x0F)-8)* 0x1000+0x10000);
 		space.unmap_write(startaddr, endaddr);
-		membank(bank)->set_base(mem + ((data & 0x0F)-8)* 0x1000+0x10000);
 	} else {
 		logerror("%02x %02x\n",block,data);
 		space.unmap_readwrite (startaddr, endaddr);

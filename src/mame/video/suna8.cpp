@@ -148,9 +148,6 @@ void suna8_state::suna8_vh_start_common(bool has_text, GFXBANK_TYPE_T gfxbank_ty
 
 	if (!m_has_text)
 	{
-		m_banked_paletteram.allocate(0x200 * 2);
-
-		m_spriteram.allocate(0x2000 * 2 * 2);   // 2 RAM banks, sparkman has 2 "chips"
 		memset(m_spriteram,0,0x2000 * 2 * 2);   // helps debugging
 	}
 

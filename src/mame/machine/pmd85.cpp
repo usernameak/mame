@@ -49,14 +49,14 @@ void pmd85_state::pmd851_update_memory()
 	}
 	else
 	{
-		space.install_write_bank(0x0000, 0x0fff, "bank1");
-		space.install_write_bank(0x1000, 0x1fff, "bank2");
-		space.install_write_bank(0x2000, 0x2fff, "bank3");
-		space.install_write_bank(0x3000, 0x3fff, "bank4");
-		space.install_write_bank(0x4000, 0x7fff, "bank5");
+		space.install_write_bank(0x0000, 0x0fff, m_bank1);
+		space.install_write_bank(0x1000, 0x1fff, m_bank2);
+		space.install_write_bank(0x2000, 0x2fff, m_bank3);
+		space.install_write_bank(0x3000, 0x3fff, m_bank4);
+		space.install_write_bank(0x4000, 0x7fff, m_bank5);
 
-		space.install_read_bank(0x1000, 0x1fff, "bank2");
-		space.install_read_bank(0x3000, 0x3fff, "bank4");
+		space.install_read_bank(0x1000, 0x1fff, m_bank2);
+		space.install_read_bank(0x3000, 0x3fff, m_bank4);
 
 		m_bank1->set_base(ram);
 		m_bank2->set_base(ram + 0x1000);
@@ -92,8 +92,8 @@ void pmd85_state::pmd852a_update_memory()
 	}
 	else
 	{
-		space.install_write_bank(0x0000, 0x0fff, "bank1");
-		space.install_write_bank(0x2000, 0x2fff, "bank3");
+		space.install_write_bank(0x0000, 0x0fff, m_bank1);
+		space.install_write_bank(0x2000, 0x2fff, m_bank3);
 
 		m_bank1->set_base(ram);
 		m_bank2->set_base(ram + 0x1000);
@@ -162,9 +162,9 @@ void pmd85_state::alfa_update_memory()
 	}
 	else
 	{
-		space.install_write_bank(0x0000, 0x0fff, "bank1");
-		space.install_write_bank(0x1000, 0x33ff, "bank2");
-		space.install_write_bank(0x3400, 0x3fff, "bank3");
+		space.install_write_bank(0x0000, 0x0fff, m_bank1);
+		space.install_write_bank(0x1000, 0x33ff, m_bank2);
+		space.install_write_bank(0x3400, 0x3fff, m_bank3);
 
 		m_bank1->set_base(ram);
 		m_bank2->set_base(ram + 0x1000);
@@ -191,7 +191,7 @@ void pmd85_state::mato_update_memory()
 	}
 	else
 	{
-		space.install_write_bank(0x0000, 0x3fff, "bank1");
+		space.install_write_bank(0x0000, 0x3fff, m_bank1);
 
 		m_bank1->set_base(ram);
 		m_bank2->set_base(ram + 0x4000);
@@ -215,7 +215,7 @@ void pmd85_state::c2717_update_memory()
 	}
 	else
 	{
-		space.install_write_bank(0x0000, 0x3fff, "bank1");
+		space.install_write_bank(0x0000, 0x3fff, m_bank1);
 		m_bank1->set_base(ram);
 		m_bank2->set_base(ram + 0x4000);
 	}

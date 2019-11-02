@@ -153,8 +153,7 @@ void galaxy_state::init_galaxy()
 	static const char *const keynames[] = { "LINE0", "LINE1", "LINE2", "LINE3", "LINE4", "LINE5", "LINE6", "LINE7" };
 
 	address_space &space = m_maincpu->space(AS_PROGRAM);
-	space.install_readwrite_bank( 0x2800, 0x2800 + m_ram->size() - 1, "bank1");
-	membank("bank1")->set_base(m_ram->pointer());
+	space.install_ram( 0x2800, 0x2800 + m_ram->size() - 1, m_ram->pointer());
 
 	if (m_ram->size() < (6 + 48) * 1024)
 	{
@@ -177,14 +176,11 @@ MACHINE_RESET_MEMBER(galaxy_state,galaxy)
 
 	/* ROM 2 enable/disable */
 	if (ioport("ROM2")->read()) {
-		space.install_read_bank(0x1000, 0x1fff, "bank10");
+		space.install_rom(0x1000, 0x1fff, memregion("maincpu")->base() + 0x1000);
 	} else {
 		space.nop_read(0x1000, 0x1fff);
 	}
 	space.nop_write(0x1000, 0x1fff);
-
-	if (ioport("ROM2")->read())
-		membank("bank10")->set_base(memregion("maincpu")->base() + 0x1000);
 
 	m_interrupts_enabled = true;
 }
@@ -204,8 +200,7 @@ MACHINE_RESET_MEMBER(galaxy_state,galaxyp)
 	ROM[0x03fa] = 0x00;
 	ROM[0x03fb] = 0xe0;
 
-	space.install_read_bank(0xe000, 0xefff, "bank11");
+	space.install_rom(0xe000, 0xefff, memregion("maincpu")->base() + 0xe000);
 	space.nop_write(0xe000, 0xefff);
-	membank("bank11")->set_base(memregion("maincpu")->base() + 0xe000);
 	m_interrupts_enabled = true;
 }

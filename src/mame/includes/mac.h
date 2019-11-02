@@ -599,7 +599,7 @@ private:
 	void kbd_shift_out(int data);
 	void keyboard_receive(int val);
 	void mac_driver_init(model_t model);
-	void mac_install_memory(offs_t memory_begin, offs_t memory_end, offs_t memory_size, void *memory_data, int is_rom, const char *bank);
+	void mac_install_memory(offs_t memory_begin, offs_t memory_end, offs_t memory_size, void *memory_data, int is_rom);
 	offs_t mac_dasm_override(std::ostream &stream, offs_t pc, const util::disasm_interface::data_buffer &opcodes, const util::disasm_interface::data_buffer &params);
 };
 

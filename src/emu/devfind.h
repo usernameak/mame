@@ -353,7 +353,7 @@ protected:
 	///   it is optional.
 	/// \return True if the region is optional, or if the region is
 	///   required and a matching region is found, or false otherwise.
-	bool validate_memregion(size_t bytes, bool required) const;
+	bool validate_memregion(bool required) const;
 
 	/// \brief Find a memory share
 	///
@@ -676,7 +676,7 @@ private:
 	virtual bool findit(bool isvalidation) override
 	{
 		if (isvalidation)
-			return this->validate_memregion(0, Required);
+			return this->validate_memregion(Required);
 
 		assert(!this->m_resolved);
 		this->m_resolved = true;
@@ -773,6 +773,89 @@ template <unsigned Count, bool Required> using memory_bank_array_finder = object
 template <unsigned Count> using optional_memory_bank_array = memory_bank_array_finder<Count, false>;
 template <unsigned Count> using required_memory_bank_array = memory_bank_array_finder<Count, true>;
 
+/// \brief Memory bank creator
+///
+/// Creates a memory bank or picks up an existing one.
+class memory_bank_creator : finder_base
+{
+public:
+	memory_bank_creator(device_t &base, char const *tag) : finder_base(base, tag) { }
+	virtual ~memory_bank_creator() = default;
+
+	/// \brief Get pointer to target bank object
+	/// \return Pointer to target bank object if found, or nullptr otherwise.
+	memory_bank *target() const { return m_target; }
+
+	/// \brief Cast-to-pointer operator
+	///
+	/// Allows implicit casting to a pointer to the target bank object.
+	/// \return Pointer to target bank object
+	operator memory_bank *() const { return m_target; }
+
+	/// \brief Pointer member access operator
+	///
+	/// Allows pointer-member-style access to members of the target
+	/// bank object.
+	/// \return Pointer to target bank object
+	memory_bank *operator->() const { return m_target; }
+
+protected:
+	virtual bool findit(bool isvalidation) override;
+	virtual void end_configuration() override;
+
+	/// \brief Pointer to target object
+	///
+	/// Pointer to target object, or nullptr if the creation has not been
+	/// attempted yet.
+	memory_bank *m_target = nullptr;
+};
+
+template <unsigned Count> using memory_bank_array_creator = object_array_finder<memory_bank_creator, Count>;
+
+/// \brief Memory share creator
+///
+/// Creates a memory share or picks up an existing one.
+template<typename uX> class memory_share_creator : finder_base
+{
+public:
+	memory_share_creator(device_t &base, char const *tag, size_t bytes, endianness_t endianness);
+	virtual ~memory_share_creator() = default;
+
+	/// \brief Get pointer to the share object
+	/// \return Pointer to share object.
+	memory_share *share() const { return m_target; }
+
+	/// \brief Get pointer to the share object backing ram
+	/// \return Pointer to the ram.
+	uX *ptr() const { return reinterpret_cast<uX *>(m_target->ptr()); }
+
+	/// \brief Cast-to-pointer operator
+	///
+	/// Allows implicit casting to a pointer to the target bank object.
+	/// \return Pointer to target bank object
+	operator uX *() const { return reinterpret_cast<uX *>(m_target->ptr()); }
+
+	/// \brief Pointer member access operator
+	///
+	/// Allows pointer-member-style access to members of the target
+	/// bank object.
+	/// \return Pointer to target bank object
+	memory_share *operator->() const { return m_target; }
+
+protected:
+	virtual bool findit(bool isvalidation) override;
+	virtual void end_configuration() override;
+
+	/// \brief Pointer to target object
+	///
+	/// Pointer to target object, or nullptr if the creation has not been
+	/// attempted yet.
+	memory_share      *m_target = nullptr;
+
+	const u8           m_width;                // width of the shared region in bits
+	const size_t       m_bytes;                // size of the shared region in bytes
+	const endianness_t m_endianness;           // endianness of the memory
+};
 
 /// \brief I/O port finder template
 ///
@@ -975,9 +1058,8 @@ public:
 	///   pointer remains valid until resolution time.
 	/// \param [in] length Desired memory region length in units of the
 	///   size of the element type, or zero to match any region length.
-	region_ptr_finder(device_t &base, char const *tag, size_t length = 0)
+	region_ptr_finder(device_t &base, char const *tag)
 		: object_finder_base<PointerType, Required>(base, tag)
-		, m_desired_length(length)
 		, m_length(0)
 	{
 	}
@@ -1025,21 +1107,15 @@ private:
 	virtual bool findit(bool isvalidation) override
 	{
 		if (isvalidation)
-			return this->validate_memregion(sizeof(PointerType) * m_desired_length, Required);
+			return this->validate_memregion(Required);
 
 		assert(!this->m_resolved);
 		this->m_resolved = true;
-		m_length = m_desired_length;
 		this->m_target = reinterpret_cast<PointerType *>(this->find_memregion(sizeof(PointerType), m_length, Required));
 		return this->report_missing("memory region");
 	}
 
-	/// \brief Desired region length
-	///
-	/// Desired region length in units of elements.
-	size_t const m_desired_length;
-
-	/// \brief Matched region length
+	/// \brief Region length
 	///
 	/// Actual length of the region that was found in units of
 	/// elements, or zero if no matching region has been found.
@@ -1078,11 +1154,9 @@ class shared_ptr_finder : public object_finder_base<PointerType, Required>
 {
 public:
 	// construction/destruction
-	shared_ptr_finder(device_t &base, char const *tag, u8 width = sizeof(PointerType) * 8)
+	shared_ptr_finder(device_t &base, char const *tag)
 		: object_finder_base<PointerType, Required>(base, tag)
-		, m_width(width)
 		, m_bytes(0)
-		, m_allocated(0)
 	{
 	}
 
@@ -1093,19 +1167,6 @@ public:
 	u32 bytes() const { return m_bytes; }
 	u32 mask() const { return m_bytes - 1; } // FIXME: wrong when sizeof(PointerType) != 1
 
-	// setter for setting the object
-	void set_target(PointerType *target, size_t bytes) { this->m_target = target; m_bytes = bytes; }
-
-	// dynamic allocation of a shared pointer
-	void allocate(u32 entries)
-	{
-		assert(m_allocated.empty());
-		m_allocated.resize(entries);
-		this->m_target = &m_allocated[0];
-		m_bytes = entries * sizeof(PointerType);
-		this->m_base.get().save_item(m_allocated, this->m_tag);
-	}
-
 private:
 	// finder
 	virtual bool findit(bool isvalidation) override
@@ -1115,14 +1176,12 @@ private:
 
 		assert(!this->m_resolved);
 		this->m_resolved = true;
-		this->m_target = reinterpret_cast<PointerType *>(this->find_memshare(m_width, m_bytes, Required));
+		this->m_target = reinterpret_cast<PointerType *>(this->find_memshare(sizeof(PointerType)*8, m_bytes, Required));
 		return this->report_missing("shared pointer");
 	}
 
 	// internal state
-	u8 const m_width;
 	size_t m_bytes;
-	std::vector<PointerType> m_allocated;
 };
 
 template <typename PointerType> using optional_shared_ptr = shared_ptr_finder<PointerType, false>;

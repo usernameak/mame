@@ -8,7 +8,7 @@ device_rom_interface::device_rom_interface(const machine_config &mconfig, device
 	device_memory_interface(mconfig, device),
 	m_rom_tag(device.basetag()),
 	m_rom_config("rom", endian, datawidth, addrwidth),
-	m_bank(nullptr),
+	m_bank(device, "bank"),
 	m_cur_bank(-1)
 {
 }
@@ -60,9 +60,9 @@ void device_rom_interface::set_rom(const void *base, u32 size)
 		m_bank_count = 1;
 
 	if(rend >= mend) {
-		space().install_read_bank(0, mend, device().tag());
-		m_bank = device().machine().memory().banks().find(device().tag())->second.get();
+		space().install_read_bank(0, mend, m_bank);
 		m_bank->configure_entries(0, m_bank_count, const_cast<void *>(base), mend+1);
+		m_bank->set_entry(0);
 		m_cur_bank = 0;
 
 	} else {

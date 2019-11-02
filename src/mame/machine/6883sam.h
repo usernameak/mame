@@ -148,7 +148,7 @@ private:
 
 	// represents one of the memory "spaces" (e.g. - $8000-$9FFF) that
 	// can ultimately point to a bank
-	template <uint16_t _addrstart, uint16_t _addrend>
+	template <int _id, uint16_t _addrstart, uint16_t _addrend>
 	class sam_space
 	{
 	public:
@@ -166,19 +166,20 @@ private:
 	};
 
 	// incidentals
-	address_space *             m_cpu_space;
-	devcb_read8                 m_read_res;
-	sam_bank                    m_banks[8];
-	sam_space<0x0000, 0x7FFF>   m_space_0000;
-	sam_space<0x8000, 0x9FFF>   m_space_8000;
-	sam_space<0xA000, 0xBFFF>   m_space_A000;
-	sam_space<0xC000, 0xFEFF>   m_space_C000;
-	sam_space<0xFF00, 0xFF1F>   m_space_FF00;
-	sam_space<0xFF20, 0xFF3F>   m_space_FF20;
-	sam_space<0xFF40, 0xFF5F>   m_space_FF40;
-	sam_space<0xFF60, 0xFFBF>   m_space_FF60;
-	sam_space<0xFFE0, 0xFFF1>   m_space_FFE0;
-	sam_space<0xFFF2, 0xFFFF>   m_space_FFF2;
+	address_space *               m_cpu_space;
+	devcb_read8                   m_read_res;
+	sam_bank                      m_banks[8];
+	memory_bank_array_creator<20> m_space_banks;
+	sam_space<0, 0x0000, 0x7FFF>  m_space_0000;
+	sam_space<1, 0x8000, 0x9FFF>  m_space_8000;
+	sam_space<2, 0xA000, 0xBFFF>  m_space_A000;
+	sam_space<3, 0xC000, 0xFEFF>  m_space_C000;
+	sam_space<4, 0xFF00, 0xFF1F>  m_space_FF00;
+	sam_space<5, 0xFF20, 0xFF3F>  m_space_FF20;
+	sam_space<6, 0xFF40, 0xFF5F>  m_space_FF40;
+	sam_space<7, 0xFF60, 0xFFBF>  m_space_FF60;
+	sam_space<8, 0xFFE0, 0xFFF1>  m_space_FFE0;
+	sam_space<9, 0xFFF2, 0xFFFF>  m_space_FFF2;
 	uint16_t                      m_counter_mask;
 
 	// SAM state

@@ -29,6 +29,7 @@ void coco12_state::device_start()
 
 void coco12_state::configure_sam()
 {
+	logerror("configuring banks\n");
 	uint8_t *rom = memregion(MAINCPU_TAG)->base();
 
 	m_sam->configure_bank(0, ram().pointer(), ram().size(), false); // $0000-$7FFF

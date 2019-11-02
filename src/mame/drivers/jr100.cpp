@@ -69,7 +69,7 @@ public:
 		, m_ram(*this, "ram")
 		, m_pcg(*this, "pcg")
 		, m_vram(*this, "vram")
-		, m_rom(*this, "rom")
+		, m_rom(*this, "maincpu")
 		, m_via(*this, "via")
 		, m_cassette(*this, "cassette")
 		, m_speaker(*this, "speaker")
@@ -100,7 +100,7 @@ private:
 	required_shared_ptr<uint8_t> m_ram;
 	required_shared_ptr<uint8_t> m_pcg;
 	required_shared_ptr<uint8_t> m_vram;
-	required_shared_ptr<uint8_t> m_rom;
+	required_region_ptr<uint8_t> m_rom;
 	required_device<via6522_device> m_via;
 	required_device<cassette_image_device> m_cassette;
 	required_device<speaker_sound_device> m_speaker;
@@ -118,13 +118,13 @@ void jr100_state::mem_map(address_map &map)
 	map(0x0000, 0x3fff).ram().share("ram");
 	//map(0x4000, 0x7fff).ram();   expansion ram
 	//map(0x8000, 0xbfff).rom();   expansion rom
-	map(0xc000, 0xc0ff).ram().share("pcg").region("maincpu", 0xc000);
+	map(0xc000, 0xc0ff).ram().share("pcg");
 	map(0xc100, 0xc3ff).ram().share("vram");
 	map(0xc800, 0xc80f).m(m_via, FUNC(via6522_device::map));
 	//map(0xcc00, 0xcfff).;   expansion i/o
 	//map(0xd000, 0xd7ff).rom();   expansion rom for printer control
 	//map(0xd800, 0xdfff).rom();   expansion rom
-	map(0xe000, 0xffff).rom().share("rom");
+	map(0xe000, 0xffff).rom().region("maincpu", 0);
 }
 
 /* Input ports */
@@ -244,33 +244,6 @@ uint32_t jr100_state::screen_update_jr100(screen_device &screen, bitmap_ind16 &b
 	return 0;
 }
 
-static const gfx_layout tilesrom_layout =
-{
-	8,8,
-	128,
-	1,
-	{ 0 },
-	{ 0, 1, 2, 3, 4, 5, 6, 7, 8 },
-	{ 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 },
-	8*8
-};
-
-static const gfx_layout tilesram_layout =
-{
-	8,8,
-	32,
-	1,
-	{ 0 },
-	{ 0, 1, 2, 3, 4, 5, 6, 7, 8 },
-	{ 0*8, 1*8, 2*8, 3*8, 4*8, 5*8, 6*8, 7*8 },
-	8*8
-};
-
-static GFXDECODE_START( gfx_jr100 )
-	GFXDECODE_ENTRY( "maincpu", 0xe000, tilesrom_layout, 0, 1 )   // inside rom
-	GFXDECODE_ENTRY( "maincpu", 0xc000, tilesram_layout, 0, 1 )   // user defined
-GFXDECODE_END
-
 READ8_MEMBER(jr100_state::pb_r)
 {
 	uint8_t data = 0x1f;
@@ -383,7 +356,6 @@ void jr100_state::jr100(machine_config &config)
 	screen.set_screen_update(FUNC(jr100_state::screen_update_jr100));
 	screen.set_palette("palette");
 
-	GFXDECODE(config, "gfxdecode", "palette", gfx_jr100);
 	PALETTE(config, "palette", palette_device::MONOCHROME);
 
 	VIA6522(config, m_via, XTAL(14'318'181) / 32);   // this divider produces the correct cassette save frequencies
@@ -407,13 +379,13 @@ void jr100_state::jr100(machine_config &config)
 
 /* ROM definition */
 ROM_START( jr100 )
-	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD( "jr100.ic5", 0xe000, 0x2000, CRC(951d08a1) SHA1(edae3daaa94924e444bbe485ac2bcd5cb5b22ca2))
+	ROM_REGION( 0x2000, "maincpu", 0 )
+	ROM_LOAD( "jr100.ic5", 0x0000, 0x2000, CRC(951d08a1) SHA1(edae3daaa94924e444bbe485ac2bcd5cb5b22ca2))
 ROM_END
 
 ROM_START( jr100u )
-	ROM_REGION( 0x10000, "maincpu", 0 )
-	ROM_LOAD( "jr100u.ic5", 0xe000, 0x2000, CRC(f589dd8d) SHA1(78a51f2ae055bf4dc1b0887a6277f5dbbd8ba512))
+	ROM_REGION( 0x2000, "maincpu", 0 )
+	ROM_LOAD( "jr100u.ic5", 0x0000, 0x2000, CRC(f589dd8d) SHA1(78a51f2ae055bf4dc1b0887a6277f5dbbd8ba512))
 ROM_END
 
 /* Driver */

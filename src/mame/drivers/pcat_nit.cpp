@@ -131,7 +131,7 @@ WRITE8_MEMBER(pcat_nit_state::pcat_nit_rombank_w)
 	if ( data & 0x40 )
 	{
 		// rom bank
-		mspace.install_read_bank(0x000d8000, 0x000dffff, "rombank" );
+		mspace.install_read_bank(0x000d8000, 0x000dffff, membank("rombank") );
 		mspace.unmap_write(0x000d8000, 0x000dffff);
 
 		if ( data & 0x80 )
@@ -148,9 +148,7 @@ WRITE8_MEMBER(pcat_nit_state::pcat_nit_rombank_w)
 		// nvram bank
 		mspace.unmap_readwrite(0x000d8000, 0x000dffff);
 
-		mspace.install_readwrite_bank(0x000d8000, 0x000d9fff, "nvrambank" );
-
-		membank("nvrambank")->set_base(m_banked_nvram.get());
+		mspace.install_ram(0x000d8000, 0x000d9fff, m_banked_nvram.get());
 
 	}
 }

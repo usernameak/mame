@@ -429,8 +429,8 @@ void nanos_state::machine_reset()
 {
 	address_space &space = m_maincpu->space(AS_PROGRAM);
 
-	space.install_write_bank(0x0000, 0x0fff, "bank3");
-	space.install_write_bank(0x1000, 0xffff, "bank2");
+	space.install_write_bank(0x0000, 0x0fff, m_bank3);
+	space.install_write_bank(0x1000, 0xffff, m_bank2);
 
 	m_bank1->set_base(m_region_maincpu->base());
 	m_bank2->set_base(m_ram->pointer() + 0x1000);

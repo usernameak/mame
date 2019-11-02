@@ -142,7 +142,6 @@ class driver_device;
 class address_space;
 template<int Width, int AddrShift, int Endian> class memory_access_cache;
 class memory_bank;
-class memory_block;
 class memory_manager;
 class memory_region;
 class memory_share;

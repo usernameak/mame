@@ -29,11 +29,11 @@ void pecom_state::machine_reset()
 
 
 	space.unmap_write(0x0000, 0x3fff);
-	space.install_write_bank(0x4000, 0x7fff, "bank2");
+	space.install_write_bank(0x4000, 0x7fff, m_bank2);
 	space.unmap_write(0xf000, 0xf7ff);
 	space.unmap_write(0xf800, 0xffff);
-	space.install_read_bank (0xf000, 0xf7ff, "bank3");
-	space.install_read_bank (0xf800, 0xffff, "bank4");
+	space.install_read_bank (0xf000, 0xf7ff, m_bank3);
+	space.install_read_bank (0xf800, 0xffff, m_bank4);
 	m_bank1->set_base(rom + 0x8000);
 	m_bank2->set_base(m_ram->pointer() + 0x4000);
 	m_bank3->set_base(rom + 0xf000);
@@ -68,7 +68,7 @@ WRITE8_MEMBER(pecom_state::pecom_bank_w)
 {
 	address_space &space2 = m_cdp1802->space(AS_PROGRAM);
 	uint8_t *rom = memregion(CDP1802_TAG)->base();
-	m_cdp1802->space(AS_PROGRAM).install_write_bank(0x0000, 0x3fff, "bank1");
+	m_cdp1802->space(AS_PROGRAM).install_write_bank(0x0000, 0x3fff, m_bank1);
 	m_bank1->set_base(m_ram->pointer() + 0x0000);
 
 	if (data==2)
@@ -82,8 +82,8 @@ WRITE8_MEMBER(pecom_state::pecom_bank_w)
 	{
 		space2.unmap_write(0xf000, 0xf7ff);
 		space2.unmap_write(0xf800, 0xffff);
-		space2.install_read_bank (0xf000, 0xf7ff, "bank3");
-		space2.install_read_bank (0xf800, 0xffff, "bank4");
+		space2.install_read_bank (0xf000, 0xf7ff, m_bank3);
+		space2.install_read_bank (0xf800, 0xffff, m_bank4);
 		m_bank3->set_base(rom + 0xf000);
 		m_bank4->set_base(rom + 0xf800);
 	}

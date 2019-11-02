@@ -26,7 +26,7 @@ public:
 	llc_state(const machine_config &mconfig, device_type type, const char *tag)
 		: driver_device(mconfig, type, tag)
 		, m_speaker(*this, "speaker")
-		, m_p_videoram(*this, "videoram")
+		, m_p_videoram(nullptr)
 		, m_maincpu(*this, "maincpu")
 		, m_ram(*this, RAM_TAG)
 		, m_p_chargen(*this, "chargen")
@@ -68,7 +68,7 @@ private:
 	uint8_t m_porta;
 	uint8_t m_term_data;
 	optional_device<speaker_sound_device> m_speaker;
-	optional_shared_ptr<uint8_t> m_p_videoram;
+	uint8_t *m_p_videoram;
 	required_device<z80_device> m_maincpu;
 	optional_device<ram_device> m_ram;
 	required_region_ptr<u8> m_p_chargen;

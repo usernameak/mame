@@ -76,7 +76,7 @@ void basic52_state::basic52_io(address_map &map)
 {
 	map.unmap_value_high();
 	map(0x0000, 0x7fff).ram();
-	map(0x8000, 0x9fff).rom(); // EPROM
+	map(0x8000, 0x9fff).rom().region("maincpu", 0); // EPROM
 	map(0xa000, 0xa003).rw("ppi8255", FUNC(i8255_device::read), FUNC(i8255_device::write));  // PPI-8255
 	//map(0xc000, 0xdfff) // Expansion block
 	//map(0xe000, 0xffff) // Expansion block
@@ -136,7 +136,7 @@ void basic52_state::basic52(machine_config &config)
 
 /* ROM definition */
 ROM_START( basic52 )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x2000, "maincpu", ROMREGION_ERASEFF )
 	ROM_SYSTEM_BIOS(0, "v11", "v 1.1")
 	ROMX_LOAD( "mcs-51-11.bin",  0x0000, 0x2000, CRC(4157b22b) SHA1(bd9e6869b400cc1c9b163243be7bdcf16ce72789), ROM_BIOS(0))
 	ROM_SYSTEM_BIOS(1, "v11b", "v 1.1b")
@@ -146,7 +146,7 @@ ROM_START( basic52 )
 ROM_END
 
 ROM_START( basic31 )
-	ROM_REGION( 0x10000, "maincpu", ROMREGION_ERASEFF )
+	ROM_REGION( 0x2000, "maincpu", ROMREGION_ERASEFF )
 	ROM_SYSTEM_BIOS(0, "v12", "v 1.2")
 	ROMX_LOAD( "mcs-51-12.bin",  0x0000, 0x2000, CRC(ee667c7c) SHA1(e69b32e69ecda2012c7113649634a3a64e984bed), ROM_BIOS(0))
 	ROM_SYSTEM_BIOS(1, "v12a", "v 1.2a")

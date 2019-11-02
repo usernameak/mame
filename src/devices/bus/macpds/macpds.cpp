@@ -108,13 +108,12 @@ void macpds_device::install_device(offs_t start, offs_t end, read16_delegate rha
 	m_maincpu->space(AS_PROGRAM).install_readwrite_handler(start, end, rhandler, whandler, mask);
 }
 
-void macpds_device::install_bank(offs_t start, offs_t end, const char *tag, uint8_t *data)
+void macpds_device::install_bank(offs_t start, offs_t end, uint8_t *data)
 {
 //  printf("install_bank: %s @ %x->%x\n", tag, start, end);
 	m_maincpu = machine().device<cpu_device>(m_cputag);
 	address_space &space = m_maincpu->space(AS_PROGRAM);
-	space.install_readwrite_bank(start, end, 0, tag );
-	machine().root_device().membank(siblingtag(tag).c_str())->set_base(data);
+	space.install_ram(start, end, data);
 }
 
 void macpds_device::set_irq_line(int line, int state)
@@ -157,22 +156,15 @@ void device_macpds_card_interface::set_macpds_device()
 	m_macpds->add_macpds_card(this);
 }
 
-void device_macpds_card_interface::install_bank(offs_t start, offs_t end, const char *tag, uint8_t *data)
+void device_macpds_card_interface::install_bank(offs_t start, offs_t end, uint8_t *data)
 {
-	char bank[256];
-
-	// append an underscore and the slot name to the bank so it's guaranteed unique
-	snprintf(bank, sizeof(bank), "%s_%s", tag, m_macpds_slottag);
-
-	m_macpds->install_bank(start, end, bank, data);
+	m_macpds->install_bank(start, end, data);
 }
 
 void device_macpds_card_interface::install_rom(device_t *dev, const char *romregion, uint32_t addr)
 {
 	uint8_t *rom = device().machine().root_device().memregion(dev->subtag(romregion).c_str())->base();
 	uint32_t romlen = device().machine().root_device().memregion(dev->subtag(romregion).c_str())->bytes();
-	char bankname[128];
-	sprintf(bankname, "rom_%x", addr);
 
-	m_macpds->install_bank(addr, addr+romlen-1, bankname, rom);
+	m_macpds->install_bank(addr, addr+romlen-1, rom);
 }

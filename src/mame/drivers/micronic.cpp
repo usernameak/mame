@@ -179,7 +179,7 @@ WRITE8_MEMBER( micronic_state::bank_select_w )
 	else
 	{
 		m_bank1->set_entry((data <= m_banks_num) ? data : m_banks_num);
-		m_maincpu->space(AS_PROGRAM).install_write_bank(0x0000, 0x7fff, "bank1");
+		m_maincpu->space(AS_PROGRAM).install_write_bank(0x0000, 0x7fff, membank("bank1"));
 	}
 }
 

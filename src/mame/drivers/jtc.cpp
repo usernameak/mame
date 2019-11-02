@@ -44,7 +44,10 @@ public:
 		, m_cassette(*this, "cassette")
 		, m_speaker(*this, "speaker")
 		, m_centronics(*this, CENTRONICS_TAG)
-		, m_video_ram(*this, "videoram")
+		, m_video_ram(*this, "videoram", JTC_ES40_VIDEORAM_SIZE, ENDIANNESS_BIG)
+		, m_color_ram_r(*this, "color_ram_r", JTC_ES40_VIDEORAM_SIZE, ENDIANNESS_BIG)
+		, m_color_ram_g(*this, "color_ram_g", JTC_ES40_VIDEORAM_SIZE, ENDIANNESS_BIG)
+		, m_color_ram_b(*this, "color_ram_b", JTC_ES40_VIDEORAM_SIZE, ENDIANNESS_BIG)
 	{ }
 
 	virtual void machine_start() override;
@@ -68,7 +71,10 @@ public:
 	required_device<cassette_image_device> m_cassette;
 	required_device<speaker_sound_device> m_speaker;
 	required_device<centronics_device> m_centronics;
-	optional_shared_ptr<uint8_t> m_video_ram;
+	memory_share_creator<uint8_t> m_video_ram;
+	memory_share_creator<uint8_t> m_color_ram_r;
+	memory_share_creator<uint8_t> m_color_ram_g;
+	memory_share_creator<uint8_t> m_color_ram_b;
 };
 
 
@@ -723,18 +729,8 @@ void jtc_state::es40_palette(palette_device &palette) const
 
 void jtces40_state::video_start()
 {
-	/* allocate memory */
-	m_video_ram.allocate(JTC_ES40_VIDEORAM_SIZE);
-	m_color_ram_r = std::make_unique<uint8_t[]>(JTC_ES40_VIDEORAM_SIZE);
-	m_color_ram_g = std::make_unique<uint8_t[]>(JTC_ES40_VIDEORAM_SIZE);
-	m_color_ram_b = std::make_unique<uint8_t[]>(JTC_ES40_VIDEORAM_SIZE);
-
 	/* register for state saving */
 	save_item(NAME(m_video_bank));
-	save_pointer(NAME(m_video_ram.target()), JTC_ES40_VIDEORAM_SIZE);
-	save_pointer(NAME(m_color_ram_r), JTC_ES40_VIDEORAM_SIZE);
-	save_pointer(NAME(m_color_ram_g), JTC_ES40_VIDEORAM_SIZE);
-	save_pointer(NAME(m_color_ram_b), JTC_ES40_VIDEORAM_SIZE);
 	save_item(NAME(m_centronics_busy));
 }
 

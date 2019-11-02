@@ -365,7 +365,7 @@ WRITE8_MEMBER( pce220_state::boot_bank_w )
 	if (data & 0x01)
 	{
 		address_space &space_prg = m_maincpu->space(AS_PROGRAM);
-		space_prg.install_write_bank(0x0000, 0x3fff, "bank1");
+		space_prg.install_write_bank(0x0000, 0x3fff, membank("bank1"));
 		membank("bank1")->set_entry(0);
 	}
 }
@@ -500,7 +500,7 @@ WRITE8_MEMBER( pcg850v_state::g850v_bank_w )
 
 	if (data < 0x16)
 	{
-		space_prg.install_read_bank(0xc000, 0xffff, "bank4");
+		space_prg.install_read_bank(0xc000, 0xffff, membank("bank4"));
 		membank("bank4")->set_entry(data);
 	}
 	else

@@ -148,6 +148,7 @@ public:
 private:
 	DECLARE_WRITE8_MEMBER(nvram_bank_w);
 
+	void cuebrickj_main_map(address_map &map);
 	uint16_t m_nvram[0x400 * 0x20 / 2];
 };
 

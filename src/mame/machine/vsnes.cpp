@@ -179,7 +179,7 @@ void vsnes_state::v_set_videorom_bank(  int start, int count, int vrom_start_ban
 	/* count determines the size of the area mapped */
 	for (i = 0; i < count; i++)
 	{
-		membank(chr_banknames[i + start])->set_entry(vrom_start_bank + i);
+		m_chr_banks[i + start]->set_entry(vrom_start_bank + i);
 	}
 }
 
@@ -218,8 +218,8 @@ MACHINE_START_MEMBER(vsnes_state,vsnes)
 	{
 		for (i = 0; i < 8; i++)
 		{
-			ppu1_space.install_read_bank(0x0400 * i, 0x0400 * i + 0x03ff, chr_banknames[i]);
-			membank(chr_banknames[i])->configure_entries(0, m_vrom_banks, m_vrom[0], 0x400);
+			ppu1_space.install_read_bank(0x0400 * i, 0x0400 * i + 0x03ff, m_chr_banks[i]);
+			m_chr_banks[i]->configure_entries(0, m_vrom_banks, m_vrom[0], 0x400);
 		}
 		v_set_videorom_bank(0, 8, 0);
 	}
@@ -252,13 +252,13 @@ MACHINE_START_MEMBER(vsnes_state,vsdual)
 	m_ppu1->space(AS_PROGRAM).install_readwrite_handler(0x2000, 0x3eff, read8_delegate(*this, FUNC(vsnes_state::vsnes_nt0_r)), write8_delegate(*this, FUNC(vsnes_state::vsnes_nt0_w)));
 	m_ppu2->space(AS_PROGRAM).install_readwrite_handler(0x2000, 0x3eff, read8_delegate(*this, FUNC(vsnes_state::vsnes_nt1_r)), write8_delegate(*this, FUNC(vsnes_state::vsnes_nt1_w)));
 	// read only!
-	m_ppu1->space(AS_PROGRAM).install_read_bank(0x0000, 0x1fff, "bank2");
+	m_ppu1->space(AS_PROGRAM).install_read_bank(0x0000, 0x1fff, m_chr_banks[0]);
 	// read only!
-	m_ppu2->space(AS_PROGRAM).install_read_bank(0x0000, 0x1fff, "bank3");
-	membank("bank2")->configure_entries(0, m_vrom_size[0] / 0x2000, m_vrom[0], 0x2000);
-	membank("bank3")->configure_entries(0, m_vrom_size[1] / 0x2000, m_vrom[1], 0x2000);
-	membank("bank2")->set_entry(0);
-	membank("bank3")->set_entry(0);
+	m_ppu2->space(AS_PROGRAM).install_read_bank(0x0000, 0x1fff, m_chr_banks[1]);
+	m_chr_banks[0]->configure_entries(0, m_vrom_size[0] / 0x2000, m_vrom[0], 0x2000);
+	m_chr_banks[1]->configure_entries(0, m_vrom_size[1] / 0x2000, m_vrom[1], 0x2000);
+	m_chr_banks[0]->set_entry(0);
+	m_chr_banks[1]->set_entry(0);
 }
 
 /*************************************
@@ -805,7 +805,9 @@ void vsnes_state::init_MMC3()
 	m_maincpu->space(AS_PROGRAM).install_write_handler(0x8000, 0xffff, write8_delegate(*this, FUNC(vsnes_state::mapper4_w)));
 
 	/* extra ram at $6000-$7fff */
-	m_maincpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
+	m_extraram = std::make_unique<uint8_t[]>(0x2000);
+	save_pointer(NAME(m_extraram.get()), 0x2000);
+	m_maincpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff, m_extraram.get());
 }
 
 /* Vs. RBI Baseball */
@@ -1003,7 +1005,9 @@ void vsnes_state::init_bnglngby()
 	m_maincpu->space(AS_PROGRAM).install_readwrite_handler(0x0231, 0x0231, read8_delegate(*this, FUNC(vsnes_state::set_bnglngby_irq_r)), write8_delegate(*this, FUNC(vsnes_state::set_bnglngby_irq_w)));
 
 	/* extra ram */
-	m_maincpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff);
+	m_extraram = std::make_unique<uint8_t[]>(0x2000);
+	save_pointer(NAME(m_extraram.get()), 0x2000);
+	m_maincpu->space(AS_PROGRAM).install_ram(0x6000, 0x7fff, m_extraram.get());
 
 	m_ret = 0;
 

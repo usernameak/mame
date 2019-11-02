@@ -61,6 +61,7 @@ protected:
 		, m_region_audiobios(*this, "audiobios")
 		, m_region_audiocpu(*this, "audiocpu")
 		, m_bank_audio_main(*this, "audio_main")
+		, m_bank_cartridge(*this, "cartridge")
 		, m_edge(*this, "edge")
 		, m_ctrl1(*this, "ctrl1")
 		, m_ctrl2(*this, "ctrl2")
@@ -139,7 +140,7 @@ protected:
 	optional_memory_region m_region_audiocpu;
 	optional_memory_bank   m_bank_audio_main; // optional because of neocd
 	memory_bank           *m_bank_audio_cart[4];
-	memory_bank           *m_bank_cartridge;
+	memory_bank_creator    m_bank_cartridge;
 
 	optional_device<neogeo_ctrl_edge_port_device> m_edge;
 	optional_device<neogeo_control_port_device> m_ctrl1;

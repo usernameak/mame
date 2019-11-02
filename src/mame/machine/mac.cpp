@@ -147,7 +147,7 @@ void mac_fdc_set_enable_lines(device_t *device, int enable_mask)
 }
 
 void mac_state::mac_install_memory(offs_t memory_begin, offs_t memory_end,
-	offs_t memory_size, void *memory_data, int is_rom, const char *bank)
+	offs_t memory_size, void *memory_data, int is_rom)
 {
 	address_space& space = m_maincpu->space(AS_PROGRAM);
 	offs_t memory_mirror;
@@ -157,20 +157,18 @@ void mac_state::mac_install_memory(offs_t memory_begin, offs_t memory_end,
 
 	if (!is_rom)
 	{
-		space.install_readwrite_bank(memory_begin, memory_end & ~memory_mirror, memory_mirror, bank);
+		space.install_ram(memory_begin, memory_end & ~memory_mirror, memory_mirror, memory_data);
 	}
 	else
 	{
 		space.unmap_write(memory_begin, memory_end);
-		space.install_read_bank(memory_begin, memory_end & ~memory_mirror, memory_mirror, bank);
+		space.install_rom(memory_begin, memory_end & ~memory_mirror, memory_mirror, memory_data);
 	}
-
-	membank(bank)->set_base(memory_data);
 
 	if (LOG_MEMORY)
 	{
-		printf("mac_install_memory(): bank=%s range=[0x%06x...0x%06x] mirror=0x%06x ptr=0x%p\n",
-			bank, memory_begin, memory_end, memory_mirror, memory_data);
+		printf("mac_install_memory(): range=[0x%06x...0x%06x] mirror=0x%06x ptr=0x%p\n",
+			memory_begin, memory_end, memory_mirror, memory_data);
 	}
 }
 
@@ -341,7 +339,7 @@ void mac_state::v8_resize()
 
 	if (is_rom)
 	{
-		mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+		mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom);
 
 		// install catcher in place of ROM that will detect the first access to ROM in its real location
 		m_maincpu->space(AS_PROGRAM).install_read_handler(0xa00000, 0xafffff, read32_delegate(*this, FUNC(mac_state::rom_switch_r)), 0xffffffff);
@@ -354,8 +352,7 @@ void mac_state::v8_resize()
 
 		// re-install ROM in its normal place
 		size_t rom_mirror = 0xfffff ^ (memregion("bootrom")->bytes() - 1);
-		m_maincpu->space(AS_PROGRAM).install_read_bank(0xa00000, 0xafffff, rom_mirror, "bankR");
-		membank("bankR")->set_base((void *)memregion("bootrom")->base());
+		m_maincpu->space(AS_PROGRAM).install_rom(0xa00000, 0xafffff, rom_mirror, memregion("bootrom")->base());
 
 		// force unmap of entire RAM region
 		space.unmap_write(0, 0x9fffff);
@@ -374,25 +371,25 @@ void mac_state::v8_resize()
 
 			if ((simm_amt > 0) && (simm_size > 0))
 			{
-//              mac_install_memory(0x000000, simm_sizes[simm_amt]-1, simm_sizes[simm_amt], memory_data + onboard_amt, is_rom, "bank1");
-				mac_install_memory(0x000000, simm_size-1, simm_size, memory_data + onboard_amt, is_rom, "bank1");
+//              mac_install_memory(0x000000, simm_sizes[simm_amt]-1, simm_sizes[simm_amt], memory_data + onboard_amt, is_rom);
+				mac_install_memory(0x000000, simm_size-1, simm_size, memory_data + onboard_amt, is_rom);
 			}
 
 			// onboard RAM sits immediately above the SIMM, if any
 			if (simm_sizes[simm_amt] + onboard_amt <= 0x800000)
 			{
-				mac_install_memory(simm_sizes[simm_amt], simm_sizes[simm_amt] + onboard_amt - 1, onboard_amt, memory_data, is_rom, "bank2");
+				mac_install_memory(simm_sizes[simm_amt], simm_sizes[simm_amt] + onboard_amt - 1, onboard_amt, memory_data, is_rom);
 			}
 
 			// a mirror of the first 2 MB of on board RAM always lives at 0x800000
-			mac_install_memory(0x800000, 0x9fffff, 0x200000, memory_data, is_rom, "bank3");
+			mac_install_memory(0x800000, 0x9fffff, 0x200000, memory_data, is_rom);
 		}
 		else
 		{
 //          printf("mac_v8_resize: SIMM off, mobo RAM at 0 and top\n");
 
-			mac_install_memory(0x000000, onboard_amt-1, onboard_amt, memory_data, is_rom, "bank1");
-			mac_install_memory(0x900000, 0x9fffff, 0x200000, memory_data+0x100000, is_rom, "bank3");
+			mac_install_memory(0x000000, onboard_amt-1, onboard_amt, memory_data, is_rom);
+			mac_install_memory(0x900000, 0x9fffff, 0x200000, memory_data+0x100000, is_rom);
 		}
 	}
 }
@@ -435,32 +432,32 @@ void mac_state::set_memory_overlay(int overlay)
 			// ROM is OK to flood to 3fffffff
 			if (is_rom)
 			{
-				mac_install_memory(0x00000000, 0x3fffffff, memory_size, memory_data, is_rom, "bank1");
+				mac_install_memory(0x00000000, 0x3fffffff, memory_size, memory_data, is_rom);
 			}
 			else    // RAM: be careful not to populate ram B with a mirror or the ROM will get confused
 			{
-				mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+				mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom);
 			}
 		}
 		else if ((m_model == MODEL_MAC_PORTABLE) || (m_model == MODEL_MAC_PB100) || (m_model == MODEL_MAC_IIFX))
 		{
 			address_space& space = m_maincpu->space(AS_PROGRAM);
 			space.unmap_write(0x000000, 0x9fffff);
-			mac_install_memory(0x000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x000000, memory_size-1, memory_size, memory_data, is_rom);
 		}
 		else if ((m_model == MODEL_MAC_PB140) || (m_model == MODEL_MAC_PB160) || ((m_model >= MODEL_MAC_PBDUO_210) && (m_model <= MODEL_MAC_PBDUO_270c)))
 		{
 			address_space& space = m_maincpu->space(AS_PROGRAM);
 			space.unmap_write(0x000000, 0xffffff);
-			mac_install_memory(0x000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x000000, memory_size-1, memory_size, memory_data, is_rom);
 		}
 		else if ((m_model >= MODEL_MAC_II) && (m_model <= MODEL_MAC_SE30) && (m_model != MODEL_MAC_IIVX) && (m_model != MODEL_MAC_IIVI))
 		{
-			mac_install_memory(0x00000000, 0x3fffffff, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x00000000, 0x3fffffff, memory_size, memory_data, is_rom);
 		}
 		else if ((m_model == MODEL_MAC_IIVX) || (m_model == MODEL_MAC_IIVI) || (m_model == MODEL_MAC_LC_III) || (m_model == MODEL_MAC_LC_III_PLUS) || (m_model >= MODEL_MAC_LC_475 && m_model <= MODEL_MAC_LC_580))   // up to 36 MB
 		{
-			mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom);
 
 			if (is_rom)
 			{
@@ -469,17 +466,16 @@ void mac_state::set_memory_overlay(int overlay)
 			else
 			{
 				size_t rom_mirror = 0xfffffff ^ (memregion("bootrom")->bytes() - 1);
-				m_maincpu->space(AS_PROGRAM).install_read_bank(0x40000000, 0x4fffffff & ~rom_mirror, rom_mirror, "bankR");
-				membank("bankR")->set_base((void *)memregion("bootrom")->base());
+				m_maincpu->space(AS_PROGRAM).install_rom(0x40000000, 0x4fffffff & ~rom_mirror, rom_mirror, memregion("bootrom")->base());
 			}
 		}
 		else if (m_model == MODEL_MAC_QUADRA_700)
 		{
-			mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x00000000, memory_size-1, memory_size, memory_data, is_rom);
 		}
 		else
 		{
-			mac_install_memory(0x00000000, 0x003fffff, memory_size, memory_data, is_rom, "bank1");
+			mac_install_memory(0x00000000, 0x003fffff, memory_size, memory_data, is_rom);
 		}
 
 		m_overlay = overlay;
@@ -2149,11 +2145,11 @@ void mac_state::mac_driver_init(model_t model)
 	if (model < MODEL_MAC_PORTABLE)
 	{
 		/* set up RAM mirror at 0x600000-0x6fffff (0x7fffff ???) */
-		mac_install_memory(0x600000, 0x6fffff, m_ram->size(), m_ram->pointer(), false, "bank2");
+		mac_install_memory(0x600000, 0x6fffff, m_ram->size(), m_ram->pointer(), false);
 
 		/* set up ROM at 0x400000-0x4fffff (-0x5fffff for mac 128k/512k/512ke) */
 		mac_install_memory(0x400000, (model >= MODEL_MAC_PLUS) ? 0x4fffff : 0x5fffff,
-			memregion("bootrom")->bytes(), memregion("bootrom")->base(), true, "bank3");
+			memregion("bootrom")->bytes(), memregion("bootrom")->base(), true);
 	}
 
 	m_overlay = -1;

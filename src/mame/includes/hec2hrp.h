@@ -91,7 +91,10 @@ public:
 		m_discrete(*this, "discrete"),
 		m_sn(*this, "sn76477"),
 		m_videoram(*this,"videoram"),
-		m_hector_videoram(*this,"hector_videoram") ,
+		m_hvram(*this, "hvram"),
+		m_rombank(*this, "rombank"),
+		m_d2rom(*this, "d2rom"),
+		m_hector_videoram(*this,"hector_videoram", 0x4000, ENDIANNESS_LITTLE) ,
 		m_keyboard(*this, "KEY.%u", 0),
 		m_minidisc_fdc(*this, "wd179x"),
 		m_floppy0(*this, "wd179x:0"),
@@ -155,7 +158,10 @@ private:
 	required_device<discrete_device> m_discrete;
 	required_device<sn76477_device> m_sn;
 	optional_shared_ptr<uint8_t> m_videoram;
-	optional_shared_ptr<uint8_t> m_hector_videoram;
+	required_memory_bank m_hvram;
+	required_memory_bank m_rombank;
+	required_memory_bank m_d2rom;
+	memory_share_creator<uint8_t> m_hector_videoram;
 	required_ioport_array<9> m_keyboard;
 
 	optional_device<fd1793_device> m_minidisc_fdc;
@@ -200,7 +206,6 @@ private:
 	int m_hector_nb_cde;
 	int m_hector_flag_result;
 	int m_print;
-	uint8_t m_hector_videoram_hrx[0x04000];
 
 	DECLARE_MACHINE_START(hec2hrp);
 	DECLARE_MACHINE_RESET(hec2hrp);

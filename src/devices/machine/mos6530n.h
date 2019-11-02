@@ -96,7 +96,7 @@ public:
 
 protected:
 	// construction/destruction
-	mos6530_device_base(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock);
+	mos6530_device_base(const machine_config &mconfig, device_type type, const char *tag, device_t *owner, uint32_t clock, u32 rsize);
 
 	// device-level overrides
 	virtual void device_start() override;
@@ -137,7 +137,7 @@ protected:
 	DECLARE_WRITE8_MEMBER( timer_on_w );
 	DECLARE_WRITE8_MEMBER( edge_w );
 
-	optional_shared_ptr<uint8_t> m_ram;
+	memory_share_creator<uint8_t> m_ram;
 	optional_region_ptr<uint8_t> m_rom;
 
 	devcb_write_line m_irq_cb;
@@ -207,8 +207,6 @@ public:
 
 protected:
 	// device-level overrides
-	virtual void device_start() override;
-
 	void update_pb() override;
 	void update_irq() override;
 	uint8_t get_irq_flags() override;
@@ -227,10 +225,6 @@ public:
 	// is there a better way to access the memory map when not using m()?
 	DECLARE_READ8_MEMBER(io_r);
 	DECLARE_WRITE8_MEMBER(io_w);
-
-protected:
-	// device-level overrides
-	virtual void device_start() override;
 };
 
 

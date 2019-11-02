@@ -54,7 +54,7 @@ private:
 	required_device<vsystem_gga_device> m_gga;
 
 	required_shared_ptr<uint16_t> m_videoram;
-	required_shared_ptr<uint16_t> m_bitmapram;
+	optional_shared_ptr<uint16_t> m_bitmapram;
 	required_shared_ptr<uint16_t> m_spriteram;
 
 	uint8_t m_upd_rom_bank;
@@ -86,6 +86,7 @@ private:
 	void draw_sprites(bitmap_ind16 &bitmap, const rectangle &cliprect, int start, int stop);
 	void draw_bitmap(bitmap_ind16 &bitmap, const rectangle &cliprect);
 	void main_map(address_map &map);
+	void svolley_map(address_map &map);
 	void sound_map(address_map &map);
 	void svolleybl_main_map(address_map &map);
 	void svolleybl_sound_map(address_map &map);

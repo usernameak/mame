@@ -93,6 +93,8 @@ public:
 	void mcr_90010(machine_config &config);
 	void cpu_90009_map(address_map &map);
 	void cpu_90009_portmap(address_map &map);
+	void cpu_90009_dp_map(address_map &map);
+	void cpu_90009_dp_portmap(address_map &map);
 	void cpu_90010_map(address_map &map);
 	void cpu_90010_portmap(address_map &map);
 	void cpu_91490_map(address_map &map);

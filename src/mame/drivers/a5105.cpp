@@ -287,12 +287,12 @@ WRITE8_MEMBER( a5105_state::a5105_memsel_w )
 		{
 		case 0:
 			membank("bank1")->set_base(m_rom_base);
-			prog.install_read_bank(0x0000, 0x3fff, "bank1");
+			prog.install_read_bank(0x0000, 0x3fff, membank("bank1"));
 			prog.unmap_write(0x0000, 0x3fff);
 			break;
 		case 2:
 			membank("bank1")->set_base(m_ram_base);
-			prog.install_readwrite_bank(0x0000, 0x3fff, "bank1");
+			prog.install_readwrite_bank(0x0000, 0x3fff, membank("bank1"));
 			break;
 		default:
 			prog.unmap_readwrite(0x0000, 0x3fff);
@@ -308,17 +308,17 @@ WRITE8_MEMBER( a5105_state::a5105_memsel_w )
 		{
 		case 0:
 			membank("bank2")->set_base(m_rom_base + 0x4000);
-			prog.install_read_bank(0x4000, 0x7fff, "bank2");
+			prog.install_read_bank(0x4000, 0x7fff, membank("bank2"));
 			prog.unmap_write(0x4000, 0x4000);
 			break;
 		case 1:
 			membank("bank2")->set_base(memregion("k5651")->base());
-			prog.install_read_bank(0x4000, 0x7fff, "bank2");
+			prog.install_read_bank(0x4000, 0x7fff, membank("bank2"));
 			prog.unmap_write(0x4000, 0x4000);
 			break;
 		case 2:
 			membank("bank2")->set_base(m_ram_base + 0x4000);
-			prog.install_readwrite_bank(0x4000, 0x7fff, "bank2");
+			prog.install_readwrite_bank(0x4000, 0x7fff, membank("bank2"));
 			break;
 		default:
 			prog.unmap_readwrite(0x4000, 0x7fff);
@@ -334,12 +334,12 @@ WRITE8_MEMBER( a5105_state::a5105_memsel_w )
 		{
 		case 0:
 			membank("bank3")->set_base(m_rom_base + 0x8000);
-			prog.install_read_bank(0x8000, 0xbfff, "bank3");
+			prog.install_read_bank(0x8000, 0xbfff, membank("bank3"));
 			prog.unmap_write(0x8000, 0xbfff);
 			break;
 		case 2:
 			membank("bank3")->set_base(m_ram_base + 0x8000);
-			prog.install_readwrite_bank(0x8000, 0xbfff, "bank3");
+			prog.install_readwrite_bank(0x8000, 0xbfff, membank("bank3"));
 			break;
 		default:
 			prog.unmap_readwrite(0x8000, 0xbfff);
@@ -355,7 +355,7 @@ WRITE8_MEMBER( a5105_state::a5105_memsel_w )
 		{
 		case 2:
 			membank("bank4")->set_base(m_ram_base + 0xc000);
-			prog.install_readwrite_bank(0xc000, 0xffff, "bank4");
+			prog.install_readwrite_bank(0xc000, 0xffff, membank("bank4"));
 			break;
 		default:
 			prog.unmap_readwrite(0xc000, 0xffff);

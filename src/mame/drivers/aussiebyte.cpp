@@ -48,7 +48,7 @@ void aussiebyte_state::aussiebyte_map(address_map &map)
 	map(0x0000, 0x3fff).bankr("bankr0").bankw("bankw0");
 	map(0x4000, 0x7fff).bankrw("bank1");
 	map(0x8000, 0xbfff).bankrw("bank2");
-	map(0xc000, 0xffff).ram().region("mram", 0x0000);
+	map(0xc000, 0xffff).ram();
 }
 
 void aussiebyte_state::aussiebyte_io(address_map &map)
@@ -99,7 +99,7 @@ INPUT_PORTS_END
 ************************************************************/
 WRITE8_MEMBER( aussiebyte_state::port15_w )
 {
-	membank("bankr0")->set_entry(m_port15); // point at ram
+	m_bankr0->set_entry(m_port15); // point at ram
 	m_port15 = true;
 }
 
@@ -175,34 +175,34 @@ WRITE8_MEMBER( aussiebyte_state::port1a_w )
 		case 4:
 			m_port1a = data*3+1;
 			if (m_port15)
-				membank("bankr0")->set_entry(data*3+1);
-			membank("bankw0")->set_entry(data*3+1);
-			membank("bank1")->set_entry(data*3+2);
-			membank("bank2")->set_entry(data*3+3);
+				m_bankr0->set_entry(data*3+1);
+			m_bankw0->set_entry(data*3+1);
+			m_bank1->set_entry(data*3+2);
+			m_bank2->set_entry(data*3+3);
 			break;
 		case 5:
 			m_port1a = 1;
 			if (m_port15)
-				membank("bankr0")->set_entry(1);
-			membank("bankw0")->set_entry(1);
-			membank("bank1")->set_entry(2);
-			membank("bank2")->set_entry(13);
+				m_bankr0->set_entry(1);
+			m_bankw0->set_entry(1);
+			m_bank1->set_entry(2);
+			m_bank2->set_entry(13);
 			break;
 		case 6:
 			m_port1a = 14;
 			if (m_port15)
-				membank("bankr0")->set_entry(14);
-			membank("bankw0")->set_entry(14);
-			membank("bank1")->set_entry(15);
-			//membank("bank2")->set_entry(0); // open bus
+				m_bankr0->set_entry(14);
+			m_bankw0->set_entry(14);
+			m_bank1->set_entry(15);
+			//m_bank2->set_entry(0); // open bus
 			break;
 		case 7:
 			m_port1a = 1;
 			if (m_port15)
-				membank("bankr0")->set_entry(1);
-			membank("bankw0")->set_entry(1);
-			membank("bank1")->set_entry(4);
-			membank("bank2")->set_entry(13);
+				m_bankr0->set_entry(1);
+			m_bankw0->set_entry(1);
+			m_bank1->set_entry(4);
+			m_bank2->set_entry(13);
 			break;
 	}
 }
@@ -446,8 +446,8 @@ QUICKLOAD_LOAD_MEMBER(aussiebyte_state::quickload_cb)
 	/* RAM must be banked in */
 	m_port15 = true;    // disable boot rom
 	m_port1a = 4;
-	membank("bankr0")->set_entry(m_port1a); /* enable correct program bank */
-	membank("bankw0")->set_entry(m_port1a);
+	m_bankr0->set_entry(m_port1a); /* enable correct program bank */
+	m_bankw0->set_entry(m_port1a);
 
 	/* Avoid loading a program if CP/M-80 is not in memory */
 	if ((prog_space.read_byte(0) != 0xc3) || (prog_space.read_byte(5) != 0xc3))
@@ -488,10 +488,10 @@ void aussiebyte_state::machine_reset()
 	m_port1a = 1;
 	m_alpha_address = 0;
 	m_graph_address = 0;
-	membank("bankr0")->set_entry(16); // point at rom
-	membank("bankw0")->set_entry(1); // always write to ram
-	membank("bank1")->set_entry(2);
-	membank("bank2")->set_entry(3);
+	m_bankr0->set_entry(16); // point at rom
+	m_bankw0->set_entry(1); // always write to ram
+	m_bank1->set_entry(2);
+	m_bank2->set_entry(3);
 	m_maincpu->reset();
 }
 
@@ -601,14 +601,12 @@ void aussiebyte_state::machine_start()
 {
 	// Main ram is divided into 16k blocks (0-15). The boot rom is block number 16.
 	// For convenience, bank 0 is permanently assigned to C000-FFFF
-	uint8_t *main = memregion("roms")->base();
-	uint8_t *ram = memregion("mram")->base();
 
-	membank("bankr0")->configure_entries(0, 16, &ram[0x0000], 0x4000);
-	membank("bankw0")->configure_entries(0, 16, &ram[0x0000], 0x4000);
-	membank("bank1")->configure_entries(0, 16, &ram[0x0000], 0x4000);
-	membank("bank2")->configure_entries(0, 16, &ram[0x0000], 0x4000);
-	membank("bankr0")->configure_entry(16, &main[0x0000]);
+	m_bankr0->configure_entries(0, 16, m_p_mram, 0x4000);
+	m_bankw0->configure_entries(0, 16, m_p_mram, 0x4000);
+	m_bank1->configure_entries(0, 16, m_p_mram, 0x4000);
+	m_bank2->configure_entries(0, 16, m_p_mram, 0x4000);
+	m_bankr0->configure_entry(16, memregion("roms")->base());
 }
 
 
@@ -625,10 +623,6 @@ ROM_START(aussieby)
 
 	ROM_REGION(0x800, "chargen", 0)
 	ROM_LOAD( "8002.bin", 0x0000, 0x0800, CRC(fdd6eb13) SHA1(a094d416e66bdab916e72238112a6265a75ca690) )
-
-	ROM_REGION(0x40000, "mram", ROMREGION_ERASE00) // main ram, 256k dynamic
-	ROM_REGION(0x10000, "vram", ROMREGION_ERASEFF) // video ram, 64k dynamic
-	ROM_REGION(0x00800, "aram", ROMREGION_ERASEFF) // attribute ram, 2k static
 ROM_END
 
 //    YEAR  NAME      PARENT  COMPAT  MACHINE     INPUT       CLASS             INIT        COMPANY        FULLNAME          FLAGS

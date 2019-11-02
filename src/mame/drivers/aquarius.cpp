@@ -204,12 +204,7 @@ void aquarius_state::init_aquarius()
 {
 	/* install expansion memory if available */
 	if (m_ram->size() > 0x1000)
-	{
-		address_space &space = m_maincpu->space(AS_PROGRAM);
-
-		space.install_readwrite_bank(0x4000, 0x4000 + m_ram->size() - 0x1000 - 1, "bank1");
-		membank("bank1")->set_base(m_ram->pointer());
-	}
+		m_maincpu->space(AS_PROGRAM).install_ram(0x4000, 0x4000 + m_ram->size() - 0x1000 - 1, m_ram->pointer());
 }
 
 

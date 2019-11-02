@@ -1012,105 +1012,6 @@ READ8_MEMBER(fm7_state::fm7_mmr_r)
 void fm7_state::fm7_update_bank(address_space & space, int bank, uint8_t physical)
 {
 	m_avbank[bank]->set_bank(physical);
-/*  uint8_t* RAM = memregion("maincpu")->base();
-    uint16_t size = 0xfff;
-    char bank_name[10];
-
-    if(bank == 15)
-        size = 0xbff;
-
-    sprintf(bank_name,"bank%d",bank+1);
-
-    if(physical >= 0x10 && physical <= 0x1b)
-    {
-        switch(physical)
-        {
-            case 0x10:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram0_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram0_w)));
-                break;
-            case 0x11:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram1_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram1_w)));
-                break;
-            case 0x12:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram2_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram2_w)));
-                break;
-            case 0x13:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram3_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram3_w)));
-                break;
-            case 0x14:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram4_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram4_w)));
-                break;
-            case 0x15:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram5_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram5_w)));
-                break;
-            case 0x16:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram6_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram6_w)));
-                break;
-            case 0x17:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram7_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram7_w)));
-                break;
-            case 0x18:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram8_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram8_w)));
-                break;
-            case 0x19:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vram9_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vram9_w)));
-                break;
-            case 0x1a:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vramA_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vramA_w)));
-                break;
-            case 0x1b:
-                space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_vramB_r)),write8_delegate(*this, FUNC(fm7_state::fm7_vramB_w)));
-                break;
-        }
-//      membank(bank+1)->set_base(RAM+(physical<<12)-0x10000);
-        return;
-    }
-    if(physical == 0x1c)
-    {
-        space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_console_ram_banked_r)),write8_delegate(*this, FUNC(fm7_state::fm7_console_ram_banked_w)));
-        return;
-    }
-    if(physical == 0x1d)
-    {
-        space.install_readwrite_handler(bank*0x1000,(bank*0x1000)+size,read8_delegate(*this, FUNC(fm7_state::fm7_sub_ram_ports_banked_r)),write8_delegate(*this, FUNC(fm7_state::fm7_sub_ram_ports_banked_w)));
-        return;
-    }
-    if(physical == 0x35)
-    {
-        if(m_init_rom_en && (m_type == SYS_FM11 || m_type == SYS_FM16))
-        {
-            RAM = memregion("init")->base();
-            space.install_read_bank(bank*0x1000,(bank*0x1000)+size,bank_name);
-            space.nop_write(bank*0x1000,(bank*0x1000)+size);
-            membank(bank_name)->set_base(RAM+(physical<<12)-0x35000);
-            return;
-        }
-    }
-    if(physical == 0x36 || physical == 0x37)
-    {
-        if(m_init_rom_en && (m_type != SYS_FM11 && m_type != SYS_FM16))
-        {
-            RAM = memregion("init")->base();
-            space.install_read_bank(bank*0x1000,(bank*0x1000)+size,bank_name);
-            space.nop_write(bank*0x1000,(bank*0x1000)+size);
-            membank(bank_name)->set_base(RAM+(physical<<12)-0x36000);
-            return;
-        }
-    }
-    if(physical > 0x37 && physical <= 0x3f)
-    {
-        if(m_basic_rom_en && (m_type != SYS_FM11 && m_type != SYS_FM16))
-        {
-            RAM = memregion("fbasic")->base();
-            space.install_read_bank(bank*0x1000,(bank*0x1000)+size,bank_name);
-            space.nop_write(bank*0x1000,(bank*0x1000)+size);
-            membank(bank_name)->set_base(RAM+(physical<<12)-0x38000);
-            return;
-        }
-    }
-    space.install_readwrite_bank(bank*0x1000,(bank*0x1000)+size,bank_name);
-    membank(bank_name)->set_base(RAM+(physical<<12));
-    */
 }
 
 void fm7_state::fm7_mmr_refresh(address_space& space)
@@ -1139,8 +1040,7 @@ void fm7_state::fm7_mmr_refresh(address_space& space)
 		window_addr = ((m_mmr.window_offset << 8) + 0x7c00) & 0xffff;
 //      if(window_addr < 0xfc00)
 		{
-			space.install_readwrite_bank(0x7c00,0x7fff,"bank24");
-			membank("bank24")->set_base(RAM+window_addr);
+			space.install_ram(0x7c00,0x7fff,RAM+window_addr);
 		}
 	}
 	else
@@ -1663,8 +1563,8 @@ void fm7_state::fm77av_mem(address_map &map)
 void fm7_state::fm77av_sub_mem(address_map &map)
 {
 	map(0x0000, 0xbfff).rw(FUNC(fm7_state::fm7_vram_r), FUNC(fm7_state::fm7_vram_w)); // VRAM
-	map(0xc000, 0xcfff).ram().region("maincpu", 0x1c000); // Console RAM
-	map(0xd000, 0xd37f).ram().region("maincpu", 0x1d000); // Work RAM
+	map(0xc000, 0xcfff).ram().share("consoleram"); // Console RAM
+	map(0xd000, 0xd37f).ram().share("workram"); // Work RAM
 	map(0xd380, 0xd3ff).ram().share("shared_ram");
 	// I/O space (D400-D4FF)
 	map(0xd400, 0xd401).r(FUNC(fm7_state::fm7_sub_keyboard_r));
@@ -1686,12 +1586,12 @@ void fm7_state::fm77av_sub_mem(address_map &map)
 void fm7_state::fm7_banked_mem(address_map &map)
 {
 	// Extended RAM
-	map(0x00000, 0x0ffff).ram().region("maincpu", 0x00000);
+	map(0x00000, 0x0ffff).ram().share("extendedram");
 
 	// Sub CPU space
 	map(0x10000, 0x1bfff).rw(FUNC(fm7_state::fm7_vram_r), FUNC(fm7_state::fm7_vram_w)); // VRAM
-	map(0x1c000, 0x1cfff).ram().region("maincpu", 0x1c000); // Console RAM
-	map(0x1d000, 0x1d37f).ram().region("maincpu", 0x1d000); // Work RAM
+	map(0x1c000, 0x1cfff).ram(); // Console RAM
+	map(0x1d000, 0x1d37f).ram(); // Work RAM
 	map(0x1d380, 0x1d3ff).ram().share("shared_ram");
 	// I/O space (D400-D4FF)
 	map(0x1d400, 0x1d401).r(FUNC(fm7_state::fm7_sub_keyboard_r));
@@ -1705,7 +1605,7 @@ void fm7_state::fm7_banked_mem(address_map &map)
 	map(0x1d410, 0x1d42b).rw(FUNC(fm7_state::fm77av_alu_r), FUNC(fm7_state::fm77av_alu_w));
 	map(0x1d430, 0x1d430).rw(FUNC(fm7_state::fm77av_video_flags_r), FUNC(fm7_state::fm77av_video_flags_w));
 	map(0x1d431, 0x1d432).rw(FUNC(fm7_state::fm77av_key_encoder_r), FUNC(fm7_state::fm77av_key_encoder_w));
-	map(0x1d500, 0x1d7ff).ram().region("maincpu", 0x1d500); // Work RAM
+	map(0x1d500, 0x1d7ff).ram().share("workram2"); // Work RAM
 	map(0x1d800, 0x1dfff).bankr("bank20");
 	map(0x1e000, 0x1ffff).bankr("bank21");
 
@@ -1713,7 +1613,7 @@ void fm7_state::fm7_banked_mem(address_map &map)
 	map(0x20000, 0x2ffff).ram().region("maincpu", 0x20000);
 
 	// Main CPU space
-	map(0x30000, 0x35fff).ram().region("maincpu", 0x30000);
+	map(0x30000, 0x35fff).ram();
 	map(0x36000, 0x37fff).bankr("init_bank_r").bankw("init_bank_w");
 	map(0x38000, 0x3fbff).bankr("fbasic_bank_r").bankw("fbasic_bank_w");
 	map(0x3fc00, 0x3ffff).ram().region("maincpu", 0x3fc00);
@@ -1879,8 +1779,8 @@ INPUT_PORTS_END
 
 void fm7_state::init_fm7()
 {
-//  m_shared_ram = std::make_unique<uint8_t[]>(0x80);
 	m_video_ram = std::make_unique<uint8_t[]>(0x18000);  // 2 pages on some systems
+	save_pointer(NAME(m_video_ram.get()), 0x18000);
 	m_timer = timer_alloc(TIMER_FM7_IRQ);
 	m_subtimer = timer_alloc(TIMER_FM7_SUBTIMER_IRQ);
 	m_keyboard_timer = timer_alloc(TIMER_FM7_KEYBOARD_POLL);
@@ -1913,10 +1813,8 @@ MACHINE_START_MEMBER(fm7_state,fm77av)
 	memcpy(RAM+0x3fff0,ROM+0x1ff0,16);
 
 	m_video.subrom = 0;  // default sub CPU ROM is type C.
-	RAM = memregion("subsyscg")->base();
-	membank("bank20")->set_base(RAM);
-	RAM = memregion("subsys_c")->base();
-	membank("bank21")->set_base(RAM+0x800);
+	membank("bank20")->set_base(memregion("subsyscg")->base());
+	membank("bank21")->set_base(memregion("subsys_c")->base()+0x800);
 
 	m_type = SYS_FM77AV;
 	m_beeper->set_state(0);
@@ -2298,11 +2196,11 @@ void fm7_state::fm16beta(machine_config &config)
 
 /* ROM definition */
 ROM_START( fm8 )
-	ROM_REGION( 0x40000, "maincpu", 0 )
-	ROM_LOAD( "fbasic10.rom", 0x38000,  0x7c00, CRC(e80ed96c) SHA1(f3fa8a6adb07224ad2a1def77d5dae9662de0867) )
+	ROM_REGION( 0x7c00, "maincpu", 0 )
+	ROM_LOAD( "fbasic10.rom", 0,  0x7c00, CRC(e80ed96c) SHA1(f3fa8a6adb07224ad2a1def77d5dae9662de0867) )
 
-	ROM_REGION( 0x20000, "sub", 0 )
-	ROM_LOAD( "subsys_8.rom", 0xd800,  0x2800, CRC(979f9046) SHA1(9c52052087bf3a41b83d437a51d89b9fcfec2515) )
+	ROM_REGION( 0x2800, "sub", 0 )
+	ROM_LOAD( "subsys_8.rom", 0,  0x2800, CRC(979f9046) SHA1(9c52052087bf3a41b83d437a51d89b9fcfec2515) )
 
 	// either one of these boot ROMs are selectable via DIP switch
 	ROM_REGION( 0x200, "basic", 0 )
@@ -2319,11 +2217,11 @@ ROM_END
 
 
 ROM_START( fmnew7 )
-	ROM_REGION( 0x40000, "maincpu", 0 ) // at 0x7ba5 there is the ID string 0302840301, meaning it's v3.02 from 1984/03/01
-	ROM_LOAD( "fbasic302.rom", 0x38000,  0x7c00, CRC(a96d19b6) SHA1(8d5f0cfe7e0d39bf2ab7e4c798a13004769c28b2) )
+	ROM_REGION( 0x7c00, "maincpu", 0 ) // at 0x7ba5 there is the ID string 0302840301, meaning it's v3.02 from 1984/03/01
+	ROM_LOAD( "fbasic302.rom", 0,  0x7c00, CRC(a96d19b6) SHA1(8d5f0cfe7e0d39bf2ab7e4c798a13004769c28b2) )
 
-	ROM_REGION( 0x20000, "sub", 0 )
-	ROM_LOAD( "subsys_c.rom", 0xd800,  0x2800, CRC(24cec93f) SHA1(50b7283db6fe1342c6063fc94046283f4feddc1c) )
+	ROM_REGION( 0x2800, "sub", 0 )
+	ROM_LOAD( "subsys_c.rom", 0,  0x2800, CRC(24cec93f) SHA1(50b7283db6fe1342c6063fc94046283f4feddc1c) )
 
 	// either one of these boot ROMs are selectable via DIP switch
 	ROM_REGION( 0x200, "basic", 0 )
@@ -2339,11 +2237,11 @@ ROM_START( fmnew7 )
 ROM_END
 
 ROM_START( fm7 )
-	ROM_REGION( 0x40000, "maincpu", 0 ) // at 0x7ba5 there is the ID string 0300820920, meaning it's v3.00 from 1982/09/20
-	ROM_LOAD( "fbasic300.rom", 0x38000,  0x7c00, CRC(87c98494) SHA1(d7e3603b0a2442c7632dad45f9704d9ad71968f5) )
+	ROM_REGION( 0x7c00, "maincpu", 0 ) // at 0x7ba5 there is the ID string 0300820920, meaning it's v3.00 from 1982/09/20
+	ROM_LOAD( "fbasic300.rom", 0,  0x7c00, CRC(87c98494) SHA1(d7e3603b0a2442c7632dad45f9704d9ad71968f5) )
 
-	ROM_REGION( 0x20000, "sub", 0 )
-	ROM_LOAD( "subsys_c.rom", 0xd800,  0x2800, CRC(24cec93f) SHA1(50b7283db6fe1342c6063fc94046283f4feddc1c) )
+	ROM_REGION( 0x2800, "sub", 0 )
+	ROM_LOAD( "subsys_c.rom", 0,  0x2800, CRC(24cec93f) SHA1(50b7283db6fe1342c6063fc94046283f4feddc1c) )
 
 	// either one of these boot ROMs are selectable via DIP switch
 	ROM_REGION( 0x200, "basic", 0 )
@@ -2359,8 +2257,8 @@ ROM_START( fm7 )
 ROM_END
 
 ROM_START( fm77av )
-	ROM_REGION( 0x40000, "maincpu", 0 )
-	ROM_FILL(0x0000,0x40000,0xff)
+	ROM_REGION( 0x7c00, "maincpu", 0 )
+	ROM_FILL(0x0000,0x7c00,0xff)
 
 	ROM_REGION( 0x2000, "init", 0 )
 	ROM_LOAD( "initiate.rom", 0x0000,  0x2000, CRC(785cb06c) SHA1(b65987e98a9564a82c85eadb86f0204eee5a5c93) )
@@ -2388,8 +2286,8 @@ ROM_START( fm77av )
 ROM_END
 
 ROM_START( fm7740sx )
-	ROM_REGION( 0x40000, "maincpu", 0 )
-	ROM_FILL(0x0000,0x40000,0xff)
+	ROM_REGION( 0x7c00, "maincpu", 0 )
+	ROM_FILL(0x0000,0x7c00,0xff)
 
 	ROM_REGION( 0x2000, "init", 0 )
 	ROM_LOAD( "initiate.rom", 0x0000,  0x2000, CRC(785cb06c) SHA1(b65987e98a9564a82c85eadb86f0204eee5a5c93) )

@@ -530,8 +530,6 @@ MC6845_UPDATE_ROW( pc1512_state::crtc_update_row )
 
 void pc1512_state::video_start()
 {
-	// allocate memory
-	m_video_ram.allocate(0x10000);
 }
 
 

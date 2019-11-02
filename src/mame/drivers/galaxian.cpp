@@ -1241,7 +1241,7 @@ INPUT_CHANGED_MEMBER(gmgalax_state::game_changed)
 	m_selected_game = newval;
 
 	/* select the bank and graphics bank based on it */
-	membank("bank1")->set_entry(m_selected_game);
+	m_bank1->set_entry(m_selected_game);
 	galaxian_gfxbank_w(space, 0, m_selected_game);
 
 	/* reset the stars */
@@ -1269,7 +1269,7 @@ CUSTOM_INPUT_MEMBER(gmgalax_state::port_r)
 WRITE8_MEMBER(galaxian_state::zigzag_bankswap_w)
 {
 	/* Zig Zag can swap ROMs 2 and 3 as a form of copy protection */
-	membank("bank1")->set_entry(data & 1);
+	m_bank1->set_entry(data & 1);
 	membank("bank2")->set_entry(~data & 1);
 }
 
@@ -7123,8 +7123,8 @@ void gmgalax_state::init_gmgalax()
 	common_init(&galaxian_state::galaxian_draw_bullet, &galaxian_state::galaxian_draw_background, &gmgalax_state::gmgalax_extend_tile_info, &gmgalax_state::gmgalax_extend_sprite_info);
 
 	/* ROM is banked */
-	space.install_read_bank(0x0000, 0x3fff, "bank1");
-	membank("bank1")->configure_entries(0, 2, memregion("maincpu")->base() + 0x10000, 0x4000);
+	space.install_read_bank(0x0000, 0x3fff, m_bank1);
+	m_bank1->configure_entries(0, 2, memregion("maincpu")->base() + 0x10000, 0x4000);
 
 	/* callback when the game select is toggled */
 	game_changed(*machine().ioport().ports().begin()->second->fields().first(), 0, 0, 0);
@@ -7172,8 +7172,8 @@ void galaxian_state::init_victoryc()
 
 void galaxian_state::init_fourplay()
 {
-	membank("bank1")->configure_entries(0, 4, memregion("maincpu")->base() + 0x10000, 0x4000);
-	membank("bank1")->set_entry(0);
+	m_bank1->configure_entries(0, 4, memregion("maincpu")->base() + 0x10000, 0x4000);
+	m_bank1->set_entry(0);
 
 	/* video extensions */
 	common_init(NULL, NULL, &galaxian_state::pisces_extend_tile_info, &galaxian_state::pisces_extend_sprite_info);
@@ -7181,8 +7181,8 @@ void galaxian_state::init_fourplay()
 
 void galaxian_state::init_videight()
 {
-	membank("bank1")->configure_entries(0, 8, memregion("maincpu")->base() + 0x10000, 0x4000);
-	membank("bank1")->set_entry(0);
+	m_bank1->configure_entries(0, 8, memregion("maincpu")->base() + 0x10000, 0x4000);
+	m_bank1->set_entry(0);
 
 	/* video extensions */
 	common_init(NULL, NULL, &galaxian_state::videight_extend_tile_info, &galaxian_state::videight_extend_sprite_info);
@@ -7347,7 +7347,7 @@ void galaxian_state::init_zigzag()
 	m_numspritegens = 2;
 
 	/* make ROMs 2 & 3 swappable */
-	membank("bank1")->configure_entries(0, 2, memregion("maincpu")->base() + 0x2000, 0x1000);
+	m_bank1->configure_entries(0, 2, memregion("maincpu")->base() + 0x2000, 0x1000);
 	membank("bank2")->configure_entries(0, 2, memregion("maincpu")->base() + 0x2000, 0x1000);
 
 	/* handler for doing the swaps */
@@ -7642,8 +7642,8 @@ void galaxian_state::init_sfx()
 	m_sfx_tilemap = true;
 
 	/* sound board has space for extra ROM */
-	m_audiocpu->space(AS_PROGRAM).install_read_bank(0x0000, 0x3fff, "bank1");
-	membank("bank1")->set_base(memregion("audiocpu")->base());
+	m_audiocpu->space(AS_PROGRAM).install_read_bank(0x0000, 0x3fff, m_bank1);
+	m_bank1->set_base(memregion("audiocpu")->base());
 }
 
 

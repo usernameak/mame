@@ -125,14 +125,14 @@ private:
 #define TVC_INSTALL_ROM_BANK(_bank,_tag,_start,_end) \
 	if (m_bank_type[_bank] != TVC_ROM_BANK) \
 	{ \
-		space.install_read_bank(_start, _end, _tag); \
+		space.install_read_bank(_start, _end, membank(_tag));	\
 		space.unmap_write(_start, _end); \
 		m_bank_type[_bank] = TVC_ROM_BANK; \
 	}
 #define TVC_INSTALL_RAM_BANK(_bank,_tag,_start,_end) \
 	if (m_bank_type[_bank] != TVC_RAM_BANK) \
 	{ \
-		space.install_readwrite_bank(_start, _end, _tag); \
+		space.install_readwrite_bank(_start, _end, membank(_tag));	\
 		m_bank_type[_bank] = TVC_RAM_BANK; \
 	}
 

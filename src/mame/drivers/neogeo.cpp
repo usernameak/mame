@@ -1404,9 +1404,8 @@ void neogeo_base_state::set_slot_idx(int slot)
 			space.install_rom(0x000080, 0x0fffff, (uint16_t *)m_slots[m_curr_slot]->get_rom_base() + 0x80/2);
 
 
-		space.install_read_bank(0x200000, 0x2fffff, "cartridge");
+		space.install_read_bank(0x200000, 0x2fffff, m_bank_cartridge);
 		space.install_write_handler(0x2ffff0, 0x2fffff, write16_delegate(*this, FUNC(neogeo_base_state::write_banksel)));
-		m_bank_cartridge = membank("cartridge");
 
 		init_cpu();
 
