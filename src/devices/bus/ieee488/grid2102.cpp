@@ -45,6 +45,7 @@ DEFINE_DEVICE_TYPE(GRID2101_HDD, grid2101_hdd_device, "grid2101_hdd", "GRID2101_
 #define GRID210X_STATE_READING_DATA 1
 #define GRID210X_STATE_WRITING_DATA 2
 #define GRID210X_STATE_WRITING_DATA_WAIT 3
+#define GRID210X_STATE_HW_FORMATTING 3
 
 uint8_t grid2102_device::identify_response[56] = {0x00, 0x02, 0xf8, 0x01, 0xD0, 0x02, 0x01, 0x20, 0x01, 0x21, 0x01, 0x01, 0x00, 0x00,
                  0x34, 0x38, 0x20, 0x54, 0x50, 0x49, 0x20, 0x44, 0x53, 0x20, 0x44, 0x44, 0x20, 0x46,
@@ -109,6 +110,12 @@ void grid210x_device::device_timer(emu_timer &timer, device_timer_id id, int par
         has_srq = true;
         m_bus->srq_w(this, 0);
         m_floppy_loop_state = GRID210X_STATE_IDLE;
+    } else if (m_floppy_loop_state == GRID210X_STATE_HW_FORMATTING) {
+        // send an srq as success flag
+        serial_poll_byte = 0x0F;
+        has_srq = true;
+        m_bus->srq_w(this, 0);
+        m_floppy_loop_state = GRID210X_STATE_IDLE;
     }
 }
 
@@ -137,6 +144,9 @@ void grid210x_device::accept_transfer() {
                 floppy_sector_number = sector_number;
                 io_size = data_size;
                 m_floppy_loop_state = GRID210X_STATE_WRITING_DATA;
+            } else if (command == 17) { // ddFormat
+                m_floppy_loop_state = GRID210X_STATE_HW_FORMATTING;
+                m_delay_timer->adjust(read_delay);
             }
         } // else something is wrong, ignore
     } else if (m_floppy_loop_state == GRID210X_STATE_WRITING_DATA) {
