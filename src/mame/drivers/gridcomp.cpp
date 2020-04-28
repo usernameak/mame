@@ -326,6 +326,7 @@ void gridcomp_state::grid1121_map(address_map &map)
 	map(0xdfe80, 0xdfe83).rw("i7220", FUNC(i7220_device::read), FUNC(i7220_device::write)).umask16(0x00ff);
 	map(0xdfea0, 0xdfeaf).unmaprw(); // ??
 	map(0xdfec0, 0xdfecf).rw(FUNC(gridcomp_state::grid_modem_r), FUNC(gridcomp_state::grid_modem_w)).umask16(0x00ff); // incl. DTMF generator
+	map(0xdff00, 0xdff1f).rw("uart8274", FUNC(i8274_device::ba_cd_r), FUNC(i8274_device::ba_cd_w)).umask16(0x00ff);
 	map(0xdff40, 0xdff5f).noprw();   // ?? machine ID EAROM, RTC
 	map(0xdff80, 0xdff8f).rw("hpib", FUNC(tms9914_device::read), FUNC(tms9914_device::write)).umask16(0x00ff);
 	map(0xdffc0, 0xdffcf).rw(FUNC(gridcomp_state::grid_keyb_r), FUNC(gridcomp_state::grid_keyb_w)); // Intel 8741 MCU
@@ -487,8 +488,7 @@ ROM_START( grid1129 )
 	ROM_DEFAULT_BIOS("ccos")
 
 	ROM_SYSTEM_BIOS(0, "ccos", "ccos bios")
-	ROMX_LOAD("1129even.bin", 0x0000, 0x2000, NO_DUMP, ROM_SKIP(1) | ROM_BIOS(0))
-	ROMX_LOAD("1129odd.bin",  0x0001, 0x2000, NO_DUMP, ROM_SKIP(1) | ROM_BIOS(0))
+	ROMX_LOAD("grid_compass_1129_bios.bin", 0x0000, 0x4000, CRC(71c80cd2) SHA1(9e7ed81e6896875a260b5a5a8fadaabfc2bcae72), ROM_BIOS(0))
 
 	ROM_SYSTEM_BIOS(1, "patched", "patched 1139 bios")
 	ROMX_LOAD("1139even.bin", 0x0000, 0x2000, CRC(67071849) SHA1(782239c155fa5821f8dbd2607cee9152d175e90e), ROM_SKIP(1) | ROM_BIOS(1))
