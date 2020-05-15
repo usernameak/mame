@@ -71,6 +71,7 @@
 #include "machine/gridkeyb.h"
 #include "machine/i7220.h"
 #include "machine/i80130.h"
+#include "machine/i8087.h"
 #include "machine/i8255.h"
 #include "machine/ram.h"
 #include "machine/tms9914.h"
@@ -121,7 +122,7 @@ public:
 	void init_gridcomp();
 
 private:
-	required_device<cpu_device> m_maincpu;
+	required_device<i8086_cpu_device> m_maincpu;
 	required_device<i80130_device> m_osp;
 	required_device<i8255_device> m_modem;
 	optional_device<i8274_device> m_uart8274;
@@ -357,6 +358,13 @@ void gridcomp_state::grid1101(machine_config &config)
 	m_maincpu->set_addrmap(AS_PROGRAM, &gridcomp_state::grid1101_map);
 	m_maincpu->set_addrmap(AS_IO, &gridcomp_state::grid1101_io);
 	m_maincpu->set_irq_acknowledge_callback(FUNC(gridcomp_state::irq_callback));
+	m_maincpu->esc_opcode_handler().set("i8087", FUNC(i8087_device::insn_w));
+	m_maincpu->esc_data_handler().set("i8087", FUNC(i8087_device::addr_w));
+
+	i8087_device &i8087(I8087(config, "i8087", XTAL(15'000'000) / 3));
+	i8087.set_space_86(m_maincpu, AS_PROGRAM);
+	i8087.irq().set(I80130_TAG, FUNC(i80130_device::ir6_w));
+	i8087.busy().set_inputline("maincpu", INPUT_LINE_TEST);
 
 	MCFG_MACHINE_START_OVERRIDE(gridcomp_state, gridcomp)
 	MCFG_MACHINE_RESET_OVERRIDE(gridcomp_state, gridcomp)

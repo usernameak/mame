@@ -91,6 +91,7 @@ void grid210x_device::device_start() {
 
 void grid210x_device::device_timer(emu_timer &timer, device_timer_id id, int param, void *ptr) {
     if (m_floppy_loop_state == GRID210X_STATE_READING_DATA) {
+        LOG("grid210x read srq\n");
         uint8_t data[io_size];
         fseek(floppy_sector_number * 512, SEEK_SET);
         fread(data, io_size);
@@ -129,6 +130,18 @@ void grid210x_device::accept_transfer() {
             uint8_t command = m_data_buffer[0];
             uint32_t sector_number = GRID2102_FETCH32(m_data_buffer, 3);
             uint16_t data_size = GRID2102_FETCH16(m_data_buffer, 7);
+            LOG("grid210x_cmd %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+                m_data_buffer[0],
+                m_data_buffer[1],
+                m_data_buffer[2],
+                m_data_buffer[3],
+                m_data_buffer[4],
+                m_data_buffer[5],
+                m_data_buffer[6],
+                m_data_buffer[7],
+                m_data_buffer[8],
+                m_data_buffer[9]
+            );
             LOG("grid210x_device command %u, data size %u, sector no %u\n", (unsigned)command, (unsigned)data_size, (unsigned)sector_number);
             (void)(sector_number);
             if (command == 0x1) { // ddGetStatus
