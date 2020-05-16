@@ -146,7 +146,7 @@ private:
 
 	uint32_t screen_update_110x(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
 	uint32_t screen_update_113x(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect);
-	uint32_t screen_update_generic(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int px);
+	uint32_t screen_update_generic(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int px, int py);
 
 	void kbd_put(u16 data);
 
@@ -240,12 +240,12 @@ READ8_MEMBER(gridcomp_state::grid_dma_r)
 	return ret;
 }
 
-uint32_t gridcomp_state::screen_update_generic(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int px)
+uint32_t gridcomp_state::screen_update_generic(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect, int px, int py)
 {
 	int x, y, offset;
 	uint16_t gfx, *p;
 
-	for (y = 0; y < 240; y++)
+	for (y = 0; y < py; y++)
 	{
 		p = &bitmap.pix16(y);
 
@@ -267,12 +267,12 @@ uint32_t gridcomp_state::screen_update_generic(screen_device &screen, bitmap_ind
 
 uint32_t gridcomp_state::screen_update_110x(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
-	return screen_update_generic(screen, bitmap, cliprect, 320);
+	return screen_update_generic(screen, bitmap, cliprect, 320, 240);
 }
 
 uint32_t gridcomp_state::screen_update_113x(screen_device &screen, bitmap_ind16 &bitmap, const rectangle &cliprect)
 {
-	return screen_update_generic(screen, bitmap, cliprect, 512);
+	return screen_update_generic(screen, bitmap, cliprect, 512, 256);
 }
 
 
@@ -458,7 +458,7 @@ void gridcomp_state::grid1131(machine_config &config)
 {
 	grid1121(config);
 	subdevice<screen_device>("screen")->set_screen_update(FUNC(gridcomp_state::screen_update_113x));
-	subdevice<screen_device>("screen")->set_raw(XTAL(15'000'000)/2, 720, 0, 512, 262, 0, 240); // XXX
+	subdevice<screen_device>("screen")->set_raw(XTAL(15'000'000)/2, 720, 0, 512, 262, 0, 256); // XXX
 }
 
 void gridcomp_state::grid1139(machine_config &config)
